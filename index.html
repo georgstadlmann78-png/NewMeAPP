@@ -1,1479 +1,1420 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>New Me - Dein persönlicher Habit & Task Tracker</title>
+  <title>New Me - Checklist & Habit Tracker</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Phosphor Icons -->
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <!-- Google Font Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
           colors: {
             brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857',
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
             }
           }
         }
       }
     }
   </script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Mobile-first scrolling & safe-area handling */
+    /* Mobile-first and smooth UI tweaks */
     body {
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none;
+      user-select: none;
     }
-    .safe-bottom {
-      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+    input, select, textarea {
+      user-select: auto;
     }
-    /* Custom subtle scrollbars */
+    /* Safe padding for bottom nav */
+    .pb-safe {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
+    /* Custom scrollbar */
     ::-webkit-scrollbar {
       width: 4px;
       height: 4px;
     }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
     ::-webkit-scrollbar-thumb {
       background: rgba(156, 163, 175, 0.4);
-      border-radius: 9999px;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
+      border-radius: 4px;
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+<body class="h-full bg-slate-900 text-slate-100 font-sans antialiased flex flex-col justify-between selection:bg-sky-500 selection:text-white">
 
-  <!-- ================= TOP APP BAR ================= -->
-  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
-    <div class="max-w-md mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-black text-lg">
-          N
+  <!-- APP CONTAINER -->
+  <div class="flex-1 flex flex-col max-w-md w-full mx-auto bg-slate-900 min-h-screen relative shadow-2xl overflow-x-hidden">
+    
+    <!-- TOP HEADER -->
+    <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+          <i class="fa-solid fa-bolt text-white text-sm"></i>
         </div>
         <div>
           <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
             New Me
-            <span class="text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded-full">Pixel 8 Ready</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-medium">Pro</span>
           </h1>
-          <p id="headerSubtitle" class="text-xs text-slate-400">Heute fokussiert bleiben</p>
+          <p id="headerSubText" class="text-xs text-slate-400 font-medium leading-none">Heute</p>
         </div>
       </div>
 
-      <button id="btnRefreshTasks" title="Tasks aktualisieren & neu berechnen" class="p-2 rounded-xl bg-slate-800 border border-slate-700/80 active:scale-95 transition-all text-slate-300 hover:text-emerald-400 flex items-center gap-1.5 text-xs font-medium">
-        <i class="ph-bold ph-arrows-clockwise text-base" id="refreshIcon"></i>
-        <span class="hidden sm:inline">Aktualisieren</span>
-      </button>
-    </div>
-  </header>
+      <div class="flex items-center gap-1.5">
+        <button id="btnRefreshTasks" title="Tasks aktualisieren" class="p-2 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded-xl transition-all active:scale-95">
+          <i class="fa-solid fa-arrows-rotate text-sm"></i>
+        </button>
+        <button id="btnOpenAddTask" class="flex items-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-3 py-1.5 rounded-xl font-semibold text-xs shadow-md shadow-sky-500/25 active:scale-95 transition-all">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Neu</span>
+        </button>
+      </div>
+    </header>
 
-  <!-- ================= MAIN CONTAINER ================= -->
-  <main class="flex-1 max-w-md w-full mx-auto p-4 pb-28">
-
-    <!-- Toast Feedback Message -->
-    <div id="toast" class="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
-      <i class="ph-bold ph-check-circle"></i>
-      <span id="toastMsg">Gespeichert!</span>
-    </div>
-
-    <!-- ----------------------------------------- -->
-    <!-- TAB 1: HEUTE / CHECKLISTE                 -->
-    <!-- ----------------------------------------- -->
-    <section id="tab-today" class="tab-content active space-y-4">
+    <!-- MAIN SCROLLABLE CONTENT -->
+    <main class="flex-1 overflow-y-auto px-4 py-4 pb-safe space-y-4">
       
-      <!-- Date Selector Ribbon -->
-      <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-3 shadow-sm">
-        <div class="flex items-center justify-between mb-2.5">
-          <button id="btnPrevDay" class="w-8 h-8 rounded-lg bg-slate-700/60 active:bg-slate-700 text-slate-300 flex items-center justify-center">
-            <i class="ph-bold ph-caret-left"></i>
-          </button>
-          
-          <div class="text-center cursor-pointer" id="currentDateWrapper">
-            <div id="displayDateLabel" class="text-sm font-bold text-white flex items-center justify-center gap-1">
-              <span id="displayDateText">Heute</span>
-              <i class="ph-bold ph-calendar text-emerald-400 text-xs"></i>
+      <!-- ================= VIEW 1: CHECKLIST ================= -->
+      <section id="viewChecklist" class="space-y-4">
+        
+        <!-- DATE SELECTOR STRIP -->
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-3 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <button id="btnPrevDay" class="w-8 h-8 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition active:scale-95">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <div class="text-center cursor-pointer" id="btnTriggerDatePicker">
+              <div class="text-sm font-semibold text-white flex items-center justify-center gap-1.5">
+                <span id="displayDateLabel">Heute</span>
+                <i class="fa-regular fa-calendar text-xs text-sky-400"></i>
+              </div>
+              <div id="displayDateSub" class="text-[11px] text-slate-400">Samstag, 31. Okt 2026</div>
+              <input type="date" id="hiddenDatePicker" class="sr-only">
             </div>
-            <div id="displayFullDate" class="text-[11px] text-slate-400 font-medium">01.01.2026</div>
-            <input type="date" id="hiddenDateInput" class="sr-only">
+            <button id="btnNextDay" class="w-8 h-8 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition active:scale-95">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
           </div>
 
-          <button id="btnNextDay" class="w-8 h-8 rounded-lg bg-slate-700/60 active:bg-slate-700 text-slate-300 flex items-center justify-center">
-            <i class="ph-bold ph-caret-right"></i>
-          </button>
-        </div>
-
-        <!-- Quick jumps -->
-        <div class="flex gap-1.5 justify-center">
-          <button id="quickYesterday" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300">Gestern</button>
-          <button id="quickToday" class="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">Heute</button>
-          <button id="quickTomorrow" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300">Morgen</button>
-        </div>
-      </div>
-
-      <!-- Daily Score Card -->
-      <div class="bg-gradient-to-r from-emerald-950/60 to-slate-800/80 border border-emerald-800/30 rounded-2xl p-4 flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-bold tracking-wider text-emerald-400 uppercase">Tagesfortschritt</span>
-          <div class="flex items-baseline gap-1 mt-0.5">
-            <span id="dailyPointsEarned" class="text-2xl font-black text-white">0</span>
-            <span class="text-xs text-slate-400">/ <span id="dailyPointsMax">0</span> Punkte</span>
+          <!-- Quick Jump Buttons & Day Score -->
+          <div class="flex items-center justify-between pt-2 border-t border-slate-700/50 text-xs">
+            <button id="btnJumpToday" class="text-sky-400 hover:underline font-medium text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-calendar-day text-[10px]"></i> Zu Heute springen
+            </button>
+            <div class="text-slate-300 font-medium text-[11px]">
+              Tages-Score: <span id="dayScoreBadge" class="font-bold text-sky-400">0 / 0 Pkt</span>
+            </div>
           </div>
-          <p id="dailyProgressSub" class="text-[11px] text-slate-400 mt-0.5">Noch keine Punkte gesammelt</p>
         </div>
-        <div class="relative w-14 h-14 flex items-center justify-center">
-          <svg class="w-14 h-14 -rotate-90">
-            <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="4.5" class="text-slate-700/70" fill="transparent"/>
-            <circle id="dailyProgressCircle" cx="28" cy="28" r="22" stroke="currentColor" stroke-width="4.5" class="text-emerald-400 transition-all duration-500" fill="transparent" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-linecap="round"/>
-          </svg>
-          <span id="dailyPercentText" class="absolute text-xs font-bold text-white">0%</span>
+
+        <!-- TASKS LIST SECTION (Categorized) -->
+        <div id="tasksContainer" class="space-y-4">
+          <!-- Dynamically populated categories & tasks -->
         </div>
-      </div>
 
-      <!-- Action Button: Tasks aktualisieren -->
-      <div class="flex items-center justify-between px-1">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Aufgaben für diesen Tag</h2>
-        <button id="btnSyncCurrentDay" class="text-xs font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1 active:scale-95 transition-transform">
-          <i class="ph-bold ph-arrows-clockwise"></i>
-          <span>Tasks neu ermitteln</span>
-        </button>
-      </div>
+      </section>
 
-      <!-- Checklist Task List -->
-      <div id="taskListContainer" class="space-y-2.5">
-        <!-- Rendered via JS -->
-      </div>
+      <!-- ================= VIEW 2: STATISTIK ================= -->
+      <section id="viewStats" class="space-y-4 hidden">
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-2xl p-4">
+          <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-sky-400"></i> Punkte-Auswertung
+          </h2>
 
-      <!-- Empty State -->
-      <div id="tasksEmptyState" class="hidden text-center py-12 px-4 bg-slate-800/30 rounded-2xl border border-dashed border-slate-700">
-        <i class="ph-bold ph-coffee text-4xl text-slate-500 mb-2"></i>
-        <h3 class="text-sm font-semibold text-slate-300">Keine Aufgaben für diesen Tag!</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Entweder ist heute dein verdienter Pausentag oder alle Termine liegen an anderen Wochentagen.</p>
-        <button onclick="switchToTab('manage')" class="mt-4 px-3.5 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-xl shadow-md hover:bg-emerald-500 transition-colors">
-          + Neue Aufgabe anlegen
-        </button>
-      </div>
-    </section>
+          <!-- PERIOD SELECTOR -->
+          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-900/80 rounded-xl mb-4 border border-slate-700/60">
+            <button id="statTabWeek" class="py-1.5 text-xs font-semibold rounded-lg bg-sky-500 text-white transition">Diese Woche</button>
+            <button id="statTabAll" class="py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition">Gesamtzeitraum</button>
+          </div>
 
-    <!-- ----------------------------------------- -->
-    <!-- TAB 2: AUFGABEN VERWALTEN (HINZUFÜGEN)    -->
-    <!-- ----------------------------------------- -->
-    <section id="tab-manage" class="tab-content space-y-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-white">Aufgaben verwalten</h2>
-          <p class="text-xs text-slate-400">Erstelle Gewohnheiten, Wochentag-Tasks oder Vorträge</p>
+          <!-- SUMMARY SCORE CARD -->
+          <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-700/70 shadow-md">
+            <div class="flex justify-between items-center mb-1">
+              <span id="statScopeTitle" class="text-xs font-medium text-slate-400">Aktuelle Woche (KW --)</span>
+              <span id="statPercentBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">0%</span>
+            </div>
+            <div class="flex items-baseline gap-2 mb-2">
+              <span id="statEarnedPoints" class="text-3xl font-extrabold text-white">0</span>
+              <span class="text-sm text-slate-400">von</span>
+              <span id="statTotalPoints" class="text-lg font-bold text-slate-300">0 Pkt</span>
+            </div>
+            <!-- Progress bar -->
+            <div class="w-full bg-slate-700/80 h-2.5 rounded-full overflow-hidden">
+              <div id="statProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
         </div>
-        <button id="btnOpenNewTaskModal" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 font-semibold text-xs text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition-all">
-          <i class="ph-bold ph-plus"></i>
-          <span>Neu erfassen</span>
-        </button>
-      </div>
 
-      <!-- List of All Defined Tasks -->
-      <div id="allTasksList" class="space-y-3">
-        <!-- Rendered via JS -->
-      </div>
-    </section>
+        <!-- BREAKDOWN PER GROUP & TASK -->
+        <div class="space-y-3" id="statsGroupsContainer">
+          <!-- Dynamically inserted stats per category & task -->
+        </div>
+      </section>
 
-    <!-- ----------------------------------------- -->
-    <!-- TAB 3: STATISTIK & AUSWERTUNG             -->
-    <!-- ----------------------------------------- -->
-    <section id="tab-stats" class="tab-content space-y-4">
-      <div>
-        <h2 class="text-lg font-bold text-white">Erfolgs-Statistik</h2>
-        <p class="text-xs text-slate-400">Punkteauswertung: Erzielte (x) vs. Mögliche (y) Punkte</p>
-      </div>
-
-      <!-- Gesamtzeitraum Score Card -->
-      <div class="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/80 rounded-2xl p-4 shadow-sm">
+      <!-- ================= VIEW 3: AUFGABEN VERWALTEN ================= -->
+      <section id="viewManage" class="space-y-4 hidden">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Gesamtzeitraum</span>
-          <span id="statsOverallPercent" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">0%</span>
+          <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider">Erfasste Aufgaben</h2>
+          <span id="manageTaskCount" class="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">11 Aufgaben</span>
         </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span id="statsOverallScore" class="text-3xl font-extrabold text-white">0</span>
-          <span class="text-sm text-slate-400">von <span id="statsOverallMax">0</span> Punkten</span>
-        </div>
-        <!-- Progress bar -->
-        <div class="w-full bg-slate-700/60 rounded-full h-2.5 mt-3 overflow-hidden">
-          <div id="statsOverallBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-700" style="width: 0%"></div>
-        </div>
-      </div>
 
-      <!-- Wochenauswertung -->
-      <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-            <i class="ph-bold ph-calendar-check text-emerald-400"></i>
-            Wochenauswertung
+        <div id="manageTasksList" class="space-y-2.5">
+          <!-- Dynamically inserted editable task rows -->
+        </div>
+
+        <button id="btnResetToDefaults" class="w-full py-2.5 border border-dashed border-rose-500/40 text-rose-400/90 hover:bg-rose-500/10 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-rotate-left"></i> Auf Werkseinstellungen zurücksetzen
+        </button>
+      </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-6 py-2.5 flex items-center justify-around z-30">
+      <button id="navBtnChecklist" class="flex flex-col items-center gap-1 text-sky-400 transition active:scale-90">
+        <i class="fa-solid fa-list-check text-lg"></i>
+        <span class="text-[10px] font-semibold tracking-wide">Checkliste</span>
+      </button>
+
+      <button id="navBtnStats" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
+        <i class="fa-solid fa-chart-simple text-lg"></i>
+        <span class="text-[10px] font-semibold tracking-wide">Statistik</span>
+      </button>
+
+      <button id="navBtnManage" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition active:scale-90">
+        <i class="fa-solid fa-sliders text-lg"></i>
+        <span class="text-[10px] font-semibold tracking-wide">Verwalten</span>
+      </button>
+    </nav>
+
+    <!-- ================= MODAL: ADD / EDIT TASK ================= -->
+    <div id="modalTask" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-opacity">
+      <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6">
+        
+        <!-- Modal Header -->
+        <div class="px-5 py-4 border-b border-slate-700/80 flex items-center justify-between">
+          <h3 id="modalTitle" class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-sky-400"></i> Neue Aufgabe erstellen
           </h3>
-          <div class="flex items-center gap-1">
-            <button id="btnPrevWeek" class="p-1 rounded-md bg-slate-700 text-slate-300 hover:text-white"><i class="ph-bold ph-caret-left"></i></button>
-            <span id="statsWeekLabel" class="text-xs font-bold text-slate-200 px-1.5">KW --</span>
-            <button id="btnNextWeek" class="p-1 rounded-md bg-slate-700 text-slate-300 hover:text-white"><i class="ph-bold ph-caret-right"></i></button>
-          </div>
-        </div>
-
-        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center justify-between">
-          <div>
-            <span class="text-[11px] text-slate-400">Punkte diese Woche</span>
-            <div class="text-xl font-bold text-white mt-0.5">
-              <span id="weekScoreX">0</span> <span class="text-xs text-slate-400 font-normal">/ <span id="weekScoreY">0</span> Pkt.</span>
-            </div>
-          </div>
-          <div class="text-right">
-            <span id="weekScorePercent" class="text-lg font-bold text-emerald-400">0%</span>
-            <p class="text-[10px] text-slate-500">Zielerreichung</p>
-          </div>
-        </div>
-
-        <!-- 7 Days Week Overview dots -->
-        <div id="weekDaysPills" class="grid grid-cols-7 gap-1 pt-1 text-center">
-          <!-- Populated by JS: Mo, Di, Mi, Do, Fr, Sa, So -->
-        </div>
-      </div>
-
-      <!-- Auswertung nach Gruppen -->
-      <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 space-y-3">
-        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-          <i class="ph-bold ph-folder-simple text-amber-400"></i>
-          Punkte pro Gruppe
-        </h3>
-        <div id="groupStatsContainer" class="space-y-3">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <!-- Auswertung je Task -->
-      <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 space-y-3">
-        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-          <i class="ph-bold ph-check-square-offset text-indigo-400"></i>
-          Auswertung je Aufgabe (Gesamt)
-        </h3>
-        <div id="taskStatsContainer" class="space-y-2.5">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <!-- Reset Data Action -->
-      <div class="pt-2 text-center">
-        <button id="btnResetAllDemo" class="text-xs text-red-400 hover:text-red-300 underline font-medium">
-          Möchtest du alle Daten zurücksetzen (Demo neu laden)?
-        </button>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
-  <nav class="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 safe-bottom">
-    <div class="max-w-md mx-auto grid grid-cols-3 py-2 px-4">
-      <button onclick="switchToTab('today')" id="nav-today" class="nav-btn flex flex-col items-center justify-center py-1 text-emerald-400 transition-colors">
-        <i class="ph-fill ph-check-circle text-2xl"></i>
-        <span class="text-[11px] font-bold mt-0.5">Heute</span>
-      </button>
-
-      <button onclick="switchToTab('manage')" id="nav-manage" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-colors">
-        <i class="ph-bold ph-plus-circle text-2xl"></i>
-        <span class="text-[11px] font-medium mt-0.5">Aufgaben</span>
-      </button>
-
-      <button onclick="switchToTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-colors">
-        <i class="ph-bold ph-chart-donut text-2xl"></i>
-        <span class="text-[11px] font-medium mt-0.5">Statistik</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- ================= MODAL: TASK HINZUFÜGEN / ÄNDERN ================= -->
-  <div id="taskModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-    <div class="bg-slate-850 bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom">
-      
-      <!-- Modal Header -->
-      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-        <div>
-          <h3 id="modalTitle" class="text-base font-bold text-white">Aufgabe hinzufügen</h3>
-          <p class="text-xs text-slate-400">Definiere Tage, Wichtung und Vortragsart</p>
-        </div>
-        <button id="btnCloseModal" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
-          <i class="ph-bold ph-x text-base"></i>
-        </button>
-      </div>
-
-      <!-- Modal Body (Scrollable) -->
-      <div class="p-4 overflow-y-auto space-y-4 text-xs">
-        <input type="hidden" id="taskEditId">
-
-        <!-- Title -->
-        <div>
-          <label class="block font-semibold text-slate-300 mb-1">Aufgabenname *</label>
-          <input type="text" id="taskNameInput" placeholder="z. B. 30 Min Laufen gehen" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm">
-        </div>
-
-        <!-- Gruppe / Kategorie -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Gruppe / Bereich *</label>
-            <input type="text" id="taskGroupInput" placeholder="z. B. Sport, Gesundheit" list="groupSuggestions" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm">
-            <datalist id="groupSuggestions">
-              <option value="Sport">
-              <option value="Gesundheit">
-              <option value="Geist & Mindset">
-              <option value="Produktivität">
-              <option value="Haushalt">
-            </datalist>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Gruppen-Farbe</label>
-            <div class="flex items-center gap-1.5 pt-1.5" id="colorPickerRow">
-              <!-- Radio dots for colors -->
-              <button type="button" data-color="emerald" class="color-choice w-6 h-6 rounded-full bg-emerald-500 ring-2 ring-white"></button>
-              <button type="button" data-color="sky" class="color-choice w-6 h-6 rounded-full bg-sky-500"></button>
-              <button type="button" data-color="violet" class="color-choice w-6 h-6 rounded-full bg-violet-500"></button>
-              <button type="button" data-color="amber" class="color-choice w-6 h-6 rounded-full bg-amber-500"></button>
-              <button type="button" data-color="rose" class="color-choice w-6 h-6 rounded-full bg-rose-500"></button>
-            </div>
-            <input type="hidden" id="taskColorInput" value="emerald">
-          </div>
-        </div>
-
-        <!-- Aufgabentyp -->
-        <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/60">
-          <label class="block font-bold text-slate-200 mb-1">Aufgabentyp</label>
-          <div class="grid grid-cols-2 gap-2 mt-2">
-            <label class="relative flex flex-col p-2.5 rounded-xl border border-slate-700 bg-slate-900 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-950/30">
-              <input type="radio" name="taskType" value="daily" checked class="sr-only">
-              <span class="font-bold text-slate-200 text-xs flex items-center gap-1">
-                <i class="ph-bold ph-repeat text-emerald-400"></i> Regulär / Fix
-              </span>
-              <span class="text-[10px] text-slate-400 mt-1">Gilt nur an den ausgewählten Wochentagen.</span>
-            </label>
-
-            <label class="relative flex flex-col p-2.5 rounded-xl border border-slate-700 bg-slate-900 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-950/30">
-              <input type="radio" name="taskType" value="carryover" class="sr-only">
-              <span class="font-bold text-slate-200 text-xs flex items-center gap-1">
-                <i class="ph-bold ph-arrows-merge text-amber-400"></i> Mit Vortrag
-              </span>
-              <span class="text-[10px] text-slate-400 mt-1">Wandert bei Nichterledigung bis zum Folgetag weiter (keine Duplikate).</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Punkte / Gewichtung -->
-        <div>
-          <label class="block font-semibold text-slate-300 mb-1.5">Gewichtung pro Erledigung</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" data-points="1" class="points-btn py-2.5 rounded-xl border border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold text-sm">
-              1.0 Pkt.
-            </button>
-            <button type="button" data-points="1.5" class="points-btn py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-sm">
-              1.5 Pkt.
-            </button>
-            <button type="button" data-points="2" class="points-btn py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-sm">
-              2.0 Pkt.
-            </button>
-          </div>
-          <input type="hidden" id="taskPointsInput" value="1">
-        </div>
-
-        <!-- Wochentage Auswahl -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="font-semibold text-slate-300">Wochentage *</label>
-            <button type="button" id="btnSelectAllDays" class="text-[11px] text-emerald-400 hover:underline">Alle Tage</button>
-          </div>
-          <div class="grid grid-cols-7 gap-1" id="weekdayButtons">
-            <!-- Mo, Di, Mi, Do, Fr, Sa, So (indices 1..7) -->
-            <button type="button" data-day="1" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">Mo</button>
-            <button type="button" data-day="2" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">Di</button>
-            <button type="button" data-day="3" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">Mi</button>
-            <button type="button" data-day="4" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">Do</button>
-            <button type="button" data-day="5" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">Fr</button>
-            <button type="button" data-day="6" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">Sa</button>
-            <button type="button" data-day="0" class="weekday-pill py-2 rounded-lg font-bold text-xs bg-slate-800 border border-slate-700 text-slate-400">So</button>
-          </div>
-        </div>
-
-        <!-- Start- und Enddatum -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Beginndatum *</label>
-            <input type="date" id="taskStartDate" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Enddatum (optional)</label>
-            <input type="date" id="taskEndDate" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="p-4 border-t border-slate-800 flex items-center justify-between gap-3 bg-slate-900">
-        <button type="button" id="btnDeleteTask" class="hidden px-3 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-semibold text-xs flex items-center gap-1">
-          <i class="ph-bold ph-trash"></i>
-          <span>Löschen</span>
-        </button>
-        <div class="flex items-center gap-2 ml-auto">
-          <button type="button" id="btnCancelModal" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-medium text-xs">
-            Abbrechen
-          </button>
-          <button type="button" id="btnSaveTask" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/30">
-            <i class="ph-bold ph-check"></i>
-            <span>Speichern</span>
+          <button id="btnCloseModal" class="w-8 h-8 rounded-full bg-slate-700/50 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm transition">
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-      </div>
 
+        <!-- Form Body -->
+        <form id="taskForm" class="p-5 overflow-y-auto space-y-4 text-xs">
+          <input type="hidden" id="formTaskId">
+
+          <!-- Task Title -->
+          <div>
+            <label class="block text-slate-300 font-medium mb-1.5">Titel / Bezeichnung *</label>
+            <input type="text" id="formTitle" required placeholder="z. B. 20 min Laufen" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 text-xs">
+          </div>
+
+          <!-- Category / Group -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-300 font-medium mb-1.5">Kategorie / Gruppe</label>
+              <select id="formCategorySelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-xs">
+                <option value="Fitness">Fitness</option>
+                <option value="Mindset & Wissen">Mindset & Wissen</option>
+                <option value="Soziales">Soziales</option>
+                <option value="Sex">Sex</option>
+                <option value="__NEW__">+ Neue Gruppe...</option>
+              </select>
+            </div>
+            <div id="customCategoryWrapper" class="hidden">
+              <label class="block text-slate-300 font-medium mb-1.5">Neue Gruppe Name</label>
+              <input type="text" id="formCategoryCustom" placeholder="z. B. Finanzen" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-xs">
+            </div>
+          </div>
+
+          <!-- Type Selector -->
+          <div>
+            <label class="block text-slate-300 font-medium mb-1.5">Aufgabentyp</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer border border-slate-700 p-2.5 rounded-xl flex flex-col items-center gap-1 text-center bg-slate-900/60 hover:bg-slate-900 peer-checked:border-sky-500 transition">
+                <input type="radio" name="formType" value="A" checked class="peer sr-only">
+                <span class="font-bold text-xs text-sky-400 peer-checked:text-sky-300">Typ A</span>
+                <span class="text-[10px] text-slate-400">Täglich / Fest</span>
+              </label>
+              <label class="cursor-pointer border border-slate-700 p-2.5 rounded-xl flex flex-col items-center gap-1 text-center bg-slate-900/60 hover:bg-slate-900 peer-checked:border-amber-500 transition">
+                <input type="radio" name="formType" value="B" class="peer sr-only">
+                <span class="font-bold text-xs text-amber-400">Typ B</span>
+                <span class="text-[10px] text-slate-400">Mit Übertrag</span>
+              </label>
+              <label class="cursor-pointer border border-slate-700 p-2.5 rounded-xl flex flex-col items-center gap-1 text-center bg-slate-900/60 hover:bg-slate-900 peer-checked:border-purple-500 transition">
+                <input type="radio" name="formType" value="C" class="peer sr-only">
+                <span class="font-bold text-xs text-purple-400">Typ C</span>
+                <span class="text-[10px] text-slate-400">Beliebig oft</span>
+              </label>
+            </div>
+            <p id="typeDescription" class="mt-1.5 text-[11px] text-slate-400 italic">
+              Typ A: Fällt an ausgewählten Wochentagen fix an.
+            </p>
+          </div>
+
+          <!-- Days Selection (Types A & B) -->
+          <div id="weekdaysSelector">
+            <label class="block text-slate-300 font-medium mb-1.5">Wochentage</label>
+            <div class="grid grid-cols-7 gap-1">
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="1" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">Mo</div>
+              </label>
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="2" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">Di</div>
+              </label>
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="3" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">Mi</div>
+              </label>
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="4" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">Do</div>
+              </label>
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="5" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">Fr</div>
+              </label>
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="6" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">Sa</div>
+              </label>
+              <label class="flex flex-col items-center text-center cursor-pointer">
+                <input type="checkbox" value="0" class="day-check sr-only peer" checked>
+                <div class="w-full py-2 rounded-lg bg-slate-900 border border-slate-700 peer-checked:bg-sky-500/20 peer-checked:border-sky-400 peer-checked:text-sky-300 text-slate-400 font-semibold text-[11px] transition">So</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Points & Target Config -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-300 font-medium mb-1.5">Punkte pro Erledigung</label>
+              <select id="formPoints" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-xs">
+                <option value="1">1.0 Punkt</option>
+                <option value="1.5">1.5 Punkte</option>
+                <option value="2">2.0 Punkte</option>
+                <option value="0.5">0.5 Punkte</option>
+                <option value="3">3.0 Punkte</option>
+              </select>
+            </div>
+
+            <div id="weeklyTargetGroup" class="hidden">
+              <label class="block text-slate-300 font-medium mb-1.5">Wochenziel (Pkt)</label>
+              <input type="number" id="formWeeklyTarget" step="0.5" min="0.5" value="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-xs">
+            </div>
+          </div>
+
+          <!-- Date Range (Begin & End) -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-300 font-medium mb-1.5">Beginndatum</label>
+              <input type="date" id="formStartDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-xs">
+            </div>
+            <div>
+              <label class="block text-slate-300 font-medium mb-1.5">Enddatum (optional)</label>
+              <input type="date" id="formEndDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-xs">
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="pt-3 flex gap-2">
+            <button type="button" id="btnCancelModal" class="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-700/50 font-medium transition active:scale-95">Abbrechen</button>
+            <button type="submit" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold shadow-lg shadow-sky-500/20 transition active:scale-95">Speichern</button>
+          </div>
+        </form>
+      </div>
     </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-sky-500/40 text-slate-100 px-4 py-2.5 rounded-2xl shadow-xl text-xs flex items-center gap-2 pointer-events-none opacity-0 transition-opacity duration-300">
+      <i class="fa-solid fa-circle-check text-sky-400" id="toastIcon"></i>
+      <span id="toastMsg">Meldung</span>
+    </div>
+
   </div>
 
-  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <!-- APPLICATION LOGIC -->
   <script>
-    /* ==========================================================
-       1. DATA STRUCTURE & STATE MANAGEMENT
-       ========================================================== */
-    const STORAGE_KEY_TASKS = 'newme_tasks_v1';
-    const STORAGE_KEY_LOGS = 'newme_logs_v1';
+    /* ========================================================
+       DATA STRUCTURES & DEFAULT PRELOADS
+       ======================================================== */
+    const STORAGE_KEY_TASKS = 'new_me_tasks_v2';
+    const STORAGE_KEY_LOGS = 'new_me_logs_v2';
+
+    // Initial default task set as requested
+    const DEFAULT_TASKS = [
+      // Fitness
+      {
+        id: 't-fit-1',
+        title: 'Vor 22:00 im Bett',
+        category: 'Fitness',
+        type: 'A',
+        days: [0, 1, 2, 3, 4, 5, 6], // Mo-So
+        points: 1.0,
+        weeklyTarget: 7,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-fit-2',
+        title: 'Morgenroutine + Proteinshake',
+        category: 'Fitness',
+        type: 'A',
+        days: [1, 2, 3, 4, 5], // Mo-Fr
+        points: 1.0,
+        weeklyTarget: 5,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-fit-3',
+        title: 'Laufen',
+        category: 'Fitness',
+        type: 'B',
+        days: [2, 4, 6], // Di, Do, Sa
+        points: 2.0,
+        weeklyTarget: 6,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-fit-4',
+        title: 'Bodystyle Fitnesstudio',
+        category: 'Fitness',
+        type: 'C',
+        days: [0, 1, 2, 3, 4, 5, 6],
+        points: 2.0,
+        weeklyTarget: 4.0, // Ziel z.B. 2x/Woche = 4 Pkt
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      // Mindset & Wissen
+      {
+        id: 't-mind-1',
+        title: 'Journaling, Fachliteratur 20 min',
+        category: 'Mindset & Wissen',
+        type: 'A',
+        days: [0, 1, 2, 3, 4, 5, 6],
+        points: 1.0,
+        weeklyTarget: 7,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-mind-2',
+        title: 'Französisch',
+        category: 'Mindset & Wissen',
+        type: 'B',
+        days: [1, 4, 0], // Mo, Do, So
+        points: 1.5,
+        weeklyTarget: 4.5,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      // Soziales
+      {
+        id: 't-soc-1',
+        title: 'Kontakt mit Nahestehenden',
+        category: 'Soziales',
+        type: 'A',
+        days: [0, 1, 2, 3, 4, 5, 6],
+        points: 1.0,
+        weeklyTarget: 7,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-soc-2',
+        title: 'Freude in der Familie erzeugen',
+        category: 'Soziales',
+        type: 'A',
+        days: [0, 1, 2, 3, 4, 5, 6],
+        points: 1.5,
+        weeklyTarget: 10.5,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      // Sex
+      {
+        id: 't-sex-1',
+        title: 'Körperpflege spezial',
+        category: 'Sex',
+        type: 'B',
+        days: [5], // Fr
+        points: 2.0,
+        weeklyTarget: 2,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-sex-2',
+        title: 'Nicht Selbstbefriedigen',
+        category: 'Sex',
+        type: 'A',
+        days: [0, 1, 2, 3, 4, 5, 6],
+        points: 1.0,
+        weeklyTarget: 7,
+        startDate: '2026-01-01',
+        endDate: ''
+      },
+      {
+        id: 't-sex-3',
+        title: 'Sex',
+        category: 'Sex',
+        type: 'C',
+        days: [0, 1, 2, 3, 4, 5, 6],
+        points: 2.0,
+        weeklyTarget: 4.0, // Punkteziel 4 Pkt / Woche
+        startDate: '2026-01-01',
+        endDate: ''
+      }
+    ];
 
     // State
     let tasks = [];
-    // logs structure: { "YYYY-MM-DD": { [taskId]: { done: true, completedAt: "ISOString", delayed: bool } } }
-    let logs = {};
+    let logs = {}; // key: 'YYYY-MM-DD', value: { taskId: { completed: true, points: 2.0 } }
     let selectedDate = new Date();
-    let statsWeekOffset = 0; // offset in weeks from current
+    let currentTab = 'checklist';
+    let statScope = 'week'; // 'week' | 'all'
 
-    const COLOR_CLASSES = {
-      emerald: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', dot: 'bg-emerald-400' },
-      sky: { bg: 'bg-sky-500/15', text: 'text-sky-400', border: 'border-sky-500/30', dot: 'bg-sky-400' },
-      violet: { bg: 'bg-violet-500/15', text: 'text-violet-400', border: 'border-violet-500/30', dot: 'bg-violet-400' },
-      amber: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', dot: 'bg-amber-400' },
-      rose: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30', dot: 'bg-rose-400' }
-    };
-
-    /* Helper: Format local date string YYYY-MM-DD */
-    function toDateKey(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
+    /* ========================================================
+       DATE HELPERS
+       ======================================================== */
+    function formatIsoDate(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
 
-    function parseDateKey(key) {
-      const parts = key.split('-');
+    function parseIsoDate(str) {
+      const parts = str.split('-');
       return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     }
 
-    /* Seed initial sample data if clean install */
-    function initDefaultData() {
-      const todayStr = toDateKey(new Date());
-      // 14 days ago for realistic history
-      const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-      const startStr = toDateKey(twoWeeksAgo);
+    function addDays(d, days) {
+      const res = new Date(d);
+      res.setDate(res.getDate() + days);
+      return res;
+    }
 
-      tasks = [
-        {
-          id: 'task-1',
-          name: 'Morgenroutine & 1L Wasser',
-          group: 'Gesundheit',
-          color: 'emerald',
-          type: 'daily',
-          points: 1.0,
-          days: [0, 1, 2, 3, 4, 5, 6], // Täglich
-          startDate: startStr,
-          endDate: ''
-        },
-        {
-          id: 'task-2',
-          name: 'Joggen / Laufen (5km)',
-          group: 'Sport',
-          color: 'amber',
-          type: 'carryover', // Carry-over logic
-          points: 2.0,
-          days: [2, 4], // Dienstag (2) und Donnerstag (4)
-          startDate: startStr,
-          endDate: ''
-        },
-        {
-          id: 'task-3',
-          name: 'Fachbuch oder Journaling (20m)',
-          group: 'Mindset',
-          color: 'violet',
-          type: 'daily',
-          points: 1.5,
-          days: [1, 2, 3, 4, 5], // Mo - Fr
-          startDate: startStr,
-          endDate: ''
-        },
-        {
-          id: 'task-4',
-          name: 'Core Workout / Stabi',
-          group: 'Sport',
-          color: 'sky',
-          type: 'carryover',
-          points: 1.5,
-          days: [1, 5], // Mo & Fr mit Vortrag
-          startDate: startStr,
-          endDate: ''
-        }
-      ];
-
-      // Generate some realistic past logs
-      logs = {};
-      const cursor = new Date(twoWeeksAgo);
+    function isToday(d) {
       const now = new Date();
-      while (cursor < now) {
-        const k = toDateKey(cursor);
-        logs[k] = {};
-        // 80% chance of completion for habit 1
-        if (Math.random() > 0.2) {
-          logs[k]['task-1'] = { done: true, completedAt: cursor.toISOString(), delayed: false };
-        }
-        // Habit 3 (Mo-Fr)
-        const day = cursor.getDay();
-        if (day >= 1 && day <= 5 && Math.random() > 0.3) {
-          logs[k]['task-3'] = { done: true, completedAt: cursor.toISOString(), delayed: false };
-        }
-        // Task 2 Laufen
-        if (day === 2 && Math.random() > 0.4) {
-          logs[k]['task-2'] = { done: true, completedAt: cursor.toISOString(), delayed: false };
-        }
-        cursor.setDate(cursor.getDate() + 1);
-      }
-
-      saveState();
+      return d.toDateString() === now.toDateString();
     }
 
-    function loadState() {
-      const storedTasks = localStorage.getItem(STORAGE_KEY_TASKS);
-      const storedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
-
-      if (storedTasks && storedLogs) {
-        try {
-          tasks = JSON.parse(storedTasks);
-          logs = JSON.parse(storedLogs);
-        } catch (e) {
-          initDefaultData();
-        }
-      } else {
-        initDefaultData();
-      }
+    function getDayOfWeek(d) {
+      return d.getDay(); // 0 is Sunday, 1 is Monday ... 6 is Saturday
     }
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasks));
-      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-    }
-
-    /* ==========================================================
-       2. TASK EVALUATION ENGINE (WITH CARRY-OVER LOGIC)
-       ========================================================== */
-    /**
-     * Checks if a specific task is scheduled for targetDateStr.
-     * Takes into account:
-     * - startDate and endDate validity
-     * - Regular scheduled days
-     * - Carry-over: If carryover task was scheduled on a previous day and NOT done,
-     *   it carries forward to today (provided no regular scheduled duplicate occurs).
-     */
-    function evaluateTaskForDate(task, targetDate) {
-      const targetStr = toDateKey(targetDate);
-      const targetDay = targetDate.getDay(); // 0 = So, 1 = Mo ...
-
-      // 1. Date boundaries check
-      if (task.startDate && targetStr < task.startDate) {
-        return { isDue: false };
-      }
-      if (task.endDate && targetStr > task.endDate) {
-        return { isDue: false };
-      }
-
-      const isScheduledToday = task.days.includes(targetDay);
-      const isDoneToday = !!(logs[targetStr] && logs[targetStr][task.id] && logs[targetStr][task.id].done);
-
-      // If regular task (not carryover)
-      if (task.type !== 'carryover') {
-        return {
-          isDue: isScheduledToday,
-          isCarryOver: false,
-          isDone: isDoneToday
-        };
-      }
-
-      // If carryover task and already planned for today:
-      if (isScheduledToday) {
-        return {
-          isDue: true,
-          isCarryOver: false,
-          isDone: isDoneToday
-        };
-      }
-
-      // Carry-over check: look back day by day until:
-      // a) We hit the task's start date
-      // b) We find a day where it was scheduled
-      // If on that previous scheduled day it was NOT completed, it carries over to today!
-      const checkBackDate = new Date(targetDate);
-      let lookbackCount = 0;
-      const MAX_LOOKBACK = 14; // Don't carry over forever if abandoned
-
-      while (lookbackCount < MAX_LOOKBACK) {
-        checkBackDate.setDate(checkBackDate.getDate() - 1);
-        lookbackCount++;
-        const prevKey = toDateKey(checkBackDate);
-
-        if (task.startDate && prevKey < task.startDate) break;
-
-        const prevDayOfWeek = checkBackDate.getDay();
-        if (task.days.includes(prevDayOfWeek)) {
-          // This was the most recent planned day!
-          const wasDoneOnScheduledDay = !!(logs[prevKey] && logs[prevKey][task.id] && logs[prevKey][task.id].done);
-          
-          if (!wasDoneOnScheduledDay) {
-            // Check if it was done on any intermediate carried-over day between scheduled day and targetDate
-            let completedInBetween = false;
-            const betweenCursor = new Date(checkBackDate);
-            betweenCursor.setDate(betweenCursor.getDate() + 1);
-
-            while (toDateKey(betweenCursor) < targetStr) {
-              const bKey = toDateKey(betweenCursor);
-              if (logs[bKey] && logs[bKey][task.id] && logs[bKey][task.id].done) {
-                completedInBetween = true;
-                break;
-              }
-              betweenCursor.setDate(betweenCursor.getDate() + 1);
-            }
-
-            if (!completedInBetween) {
-              // It is carried over to today!
-              return {
-                isDue: true,
-                isCarryOver: true,
-                carriedFrom: prevKey,
-                isDone: isDoneToday
-              };
-            }
-          }
-          // If it was done on the scheduled day, no carry-over
-          break;
-        }
-      }
-
-      return { isDue: false };
-    }
-
-    /**
-     * Returns list of task objects relevant for a given date
-     */
-    function getTasksForDate(targetDate) {
-      const results = [];
-      tasks.forEach(task => {
-        const evalResult = evaluateTaskForDate(task, targetDate);
-        if (evalResult.isDue) {
-          results.push({
-            ...task,
-            isCarryOver: evalResult.isCarryOver,
-            carriedFrom: evalResult.carriedFrom,
-            isDone: evalResult.isDone
-          });
-        }
-      });
-      return results;
-    }
-
-    /* ==========================================================
-       3. UI RENDERING & INTERACTIONS (TODAY / CHECKLIST)
-       ========================================================== */
-    function renderTodayView() {
-      const dateKey = toDateKey(selectedDate);
-      const todayKey = toDateKey(new Date());
-
-      // Date Header & Labeling
-      const fullDateStr = selectedDate.toLocaleDateString('de-DE', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
-      document.getElementById('displayFullDate').textContent = fullDateStr;
-
-      const dateLabel = document.getElementById('displayDateText');
-      if (dateKey === todayKey) {
-        dateLabel.textContent = 'Heute';
-      } else {
-        const diffDays = Math.round((selectedDate - new Date()) / (1000 * 60 * 60 * 24));
-        if (diffDays === -1) dateLabel.textContent = 'Gestern';
-        else if (diffDays === 1) dateLabel.textContent = 'Morgen';
-        else dateLabel.textContent = selectedDate.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
-      }
-
-      // Get Active Tasks for selected date
-      const activeTasks = getTasksForDate(selectedDate);
-      const container = document.getElementById('taskListContainer');
-      const emptyState = document.getElementById('tasksEmptyState');
-
-      container.innerHTML = '';
-
-      if (activeTasks.length === 0) {
-        emptyState.classList.remove('hidden');
-      } else {
-        emptyState.classList.add('hidden');
-
-        // Score summary for this day
-        let earnedPoints = 0;
-        let maxPoints = 0;
-
-        activeTasks.forEach(task => {
-          maxPoints += task.points;
-          if (task.isDone) earnedPoints += task.points;
-
-          const colorScheme = COLOR_CLASSES[task.color] || COLOR_CLASSES.emerald;
-          const isDelayed = logs[dateKey] && logs[dateKey][task.id] && logs[dateKey][task.id].delayed;
-
-          const card = document.createElement('div');
-          card.className = `p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 relative overflow-hidden ${
-            task.isDone
-              ? 'bg-slate-800/40 border-slate-700/50 opacity-90'
-              : 'bg-slate-800 border-slate-700/80 shadow-sm active:scale-[0.99]'
-          }`;
-
-          card.innerHTML = `
-            <!-- Checkbox -->
-            <button onclick="toggleTaskCompletion('${task.id}')" class="mt-0.5 w-7 h-7 rounded-xl flex items-center justify-center transition-all ${
-              task.isDone
-                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25 ring-2 ring-emerald-400/40'
-                : 'border-2 border-slate-600 hover:border-emerald-400 bg-slate-900/80 text-transparent'
-            }">
-              <i class="ph-bold ph-check text-base"></i>
-            </button>
-
-            <!-- Details -->
-            <div class="flex-1 min-w-0" onclick="toggleTaskCompletion('${task.id}')">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${colorScheme.bg} ${colorScheme.text} border ${colorScheme.border}">
-                  ${escapeHtml(task.group)}
-                </span>
-
-                ${task.isCarryOver ? `
-                  <span class="text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                    <i class="ph-bold ph-arrow-bend-down-right"></i> Vortrag
-                  </span>
-                ` : ''}
-
-                ${isDelayed ? `
-                  <span class="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                    <i class="ph-bold ph-clock"></i> Verspätet
-                  </span>
-                ` : ''}
-
-                <span class="text-[11px] font-bold ml-auto ${task.isDone ? 'text-emerald-400' : 'text-slate-400'}">
-                  +${task.points} Pkt.
-                </span>
-              </div>
-
-              <h4 class="text-sm font-semibold mt-1 text-slate-100 ${task.isDone ? 'line-through text-slate-400' : ''}">
-                ${escapeHtml(task.name)}
-              </h4>
-
-              <div class="flex items-center gap-2 mt-1.5 text-[11px] text-slate-400">
-                ${task.type === 'carryover' ? '<span><i class="ph-bold ph-arrows-merge text-amber-400 mr-0.5"></i> Carry-over</span>' : '<span><i class="ph-bold ph-calendar text-slate-500 mr-0.5"></i> Regulär</span>'}
-                <span>•</span>
-                <span>${task.days.length === 7 ? 'Täglich' : task.days.length + ' Tage/Woche'}</span>
-              </div>
-            </div>
-          `;
-
-          container.appendChild(card);
-        });
-
-        // Update Daily Score
-        document.getElementById('dailyPointsEarned').textContent = earnedPoints % 1 === 0 ? earnedPoints : earnedPoints.toFixed(1);
-        document.getElementById('dailyPointsMax').textContent = maxPoints % 1 === 0 ? maxPoints : maxPoints.toFixed(1);
-
-        const pct = maxPoints > 0 ? Math.round((earnedPoints / maxPoints) * 100) : 0;
-        document.getElementById('dailyPercentText').textContent = `${pct}%`;
-
-        // Circle stroke offset (Circumference = 2 * PI * 22 ~= 138.2)
-        const offset = 138.2 - (138.2 * pct) / 100;
-        document.getElementById('dailyProgressCircle').style.strokeDashoffset = offset;
-
-        const sub = document.getElementById('dailyProgressSub');
-        if (pct === 100) sub.textContent = '🌟 Fantastisch! Alles erledigt.';
-        else if (pct >= 50) sub.textContent = '👍 Über die Hälfte geschafft!';
-        else if (pct > 0) sub.textContent = 'Guter Anfang! Weitermachen.';
-        else sub.textContent = 'Noch keine Punkte gesammelt.';
-      }
-    }
-
-    /**
-     * Toggles completion of a task on the currently selected date.
-     * Supports "verspätet abhaken" (delayed marking) if marked on a date other than today.
-     */
-    function toggleTaskCompletion(taskId) {
-      const dateKey = toDateKey(selectedDate);
-      const todayKey = toDateKey(new Date());
-
-      if (!logs[dateKey]) {
-        logs[dateKey] = {};
-      }
-
-      const isCurrentDone = logs[dateKey][taskId] && logs[dateKey][taskId].done;
-
-      if (isCurrentDone) {
-        // Uncheck
-        delete logs[dateKey][taskId];
-        showToast('Aufgabe wieder geöffnet');
-      } else {
-        // Check
-        const isLate = dateKey < todayKey;
-        logs[dateKey][taskId] = {
-          done: true,
-          completedAt: new Date().toISOString(),
-          delayed: isLate
-        };
-        showToast(isLate ? 'Nachträglich abgehakt (+Punkte)!' : 'Super gemacht! Punkte gutgeschrieben.');
-      }
-
-      saveState();
-      renderTodayView();
-      renderStatsView();
-    }
-
-    /**
-     * "Tasks aktualisieren" Button:
-     * Re-evaluates carries, removes phantom states, refreshes UI
-     */
-    function refreshTasksAction() {
-      const icon = document.getElementById('refreshIcon');
-      icon.classList.add('animate-spin');
-
-      setTimeout(() => {
-        saveState();
-        renderTodayView();
-        renderStatsView();
-        icon.classList.remove('animate-spin');
-        showToast('Tagestasks & Vorträge synchronisiert!');
-      }, 350);
-    }
-
-    /* ==========================================================
-       4. UI RENDERING: TASK MANAGEMENT (ADD / EDIT / DELETE)
-       ========================================================== */
-    function renderManageView() {
-      const listContainer = document.getElementById('allTasksList');
-      listContainer.innerHTML = '';
-
-      if (tasks.length === 0) {
-        listContainer.innerHTML = `
-          <div class="text-center py-10 bg-slate-800/40 rounded-2xl border border-dashed border-slate-700">
-            <p class="text-xs text-slate-400">Keine Aufgaben vorhanden. Tippe oben auf "Neu erfassen".</p>
-          </div>
-        `;
-        return;
-      }
-
-      const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-
-      tasks.forEach(task => {
-        const colorScheme = COLOR_CLASSES[task.color] || COLOR_CLASSES.emerald;
-        const card = document.createElement('div');
-        card.className = 'p-4 rounded-2xl bg-slate-800 border border-slate-700/80 shadow-sm flex flex-col gap-2.5';
-
-        const dayBadges = task.days.length === 7
-          ? '<span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded">Täglich</span>'
-          : task.days.sort((a,b) => (a===0?7:a)-(b===0?7:b)).map(d => `<span class="text-[10px] bg-slate-700/80 text-slate-300 px-1.5 py-0.5 rounded font-mono">${dayNames[d]}</span>`).join(' ');
-
-        card.innerHTML = `
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${colorScheme.bg} ${colorScheme.text} border ${colorScheme.border}">
-                  ${escapeHtml(task.group)}
-                </span>
-                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-700 text-slate-300">
-                  ${task.type === 'carryover' ? 'Vortrag' : 'Regulär'}
-                </span>
-              </div>
-              <h3 class="text-sm font-bold text-white mt-1.5">${escapeHtml(task.name)}</h3>
-            </div>
-            <button onclick="openEditTaskModal('${task.id}')" class="p-2 rounded-xl bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs flex items-center gap-1 font-semibold">
-              <i class="ph-bold ph-pencil-simple"></i>
-              <span>Bearbeiten</span>
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-1.5 pt-1">
-            ${dayBadges}
-          </div>
-
-          <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Start: ${task.startDate || 'Seit Beginn'} ${task.endDate ? `• Bis: ${task.endDate}` : ''}</span>
-            <span class="font-bold text-emerald-400">${task.points} Punkte</span>
-          </div>
-        `;
-        listContainer.appendChild(card);
-      });
-    }
-
-    /* Modal Form logic */
-    function openNewTaskModal() {
-      document.getElementById('modalTitle').textContent = 'Neue Aufgabe erfassen';
-      document.getElementById('taskEditId').value = '';
-      document.getElementById('taskNameInput').value = '';
-      document.getElementById('taskGroupInput').value = 'Alltag';
-      document.getElementById('taskStartDate').value = toDateKey(new Date());
-      document.getElementById('taskEndDate').value = '';
-      setModalPoints(1.0);
-      setModalColor('emerald');
-      setModalDays([1, 2, 3, 4, 5, 6, 0]); // All days by default
-      document.querySelector('input[name="taskType"][value="daily"]').checked = true;
-      document.getElementById('btnDeleteTask').classList.add('hidden');
-      document.getElementById('taskModal').classList.remove('hidden');
-    }
-
-    function openEditTaskModal(id) {
-      const task = tasks.find(t => t.id === id);
-      if (!task) return;
-
-      document.getElementById('modalTitle').textContent = 'Aufgabe bearbeiten';
-      document.getElementById('taskEditId').value = task.id;
-      document.getElementById('taskNameInput').value = task.name;
-      document.getElementById('taskGroupInput').value = task.group;
-      document.getElementById('taskStartDate').value = task.startDate || '';
-      document.getElementById('taskEndDate').value = task.endDate || '';
-      setModalPoints(task.points);
-      setModalColor(task.color || 'emerald');
-      setModalDays(task.days);
-
-      const typeRadio = document.querySelector(`input[name="taskType"][value="${task.type}"]`);
-      if (typeRadio) typeRadio.checked = true;
-
-      document.getElementById('btnDeleteTask').classList.remove('hidden');
-      document.getElementById('taskModal').classList.remove('hidden');
-    }
-
-    function closeModal() {
-      document.getElementById('taskModal').classList.add('hidden');
-    }
-
-    function setModalPoints(pts) {
-      document.getElementById('taskPointsInput').value = pts;
-      document.querySelectorAll('.points-btn').forEach(btn => {
-        if (parseFloat(btn.dataset.points) === parseFloat(pts)) {
-          btn.className = 'points-btn py-2.5 rounded-xl border border-emerald-500 bg-emerald-500/20 text-emerald-300 font-bold text-sm';
-        } else {
-          btn.className = 'points-btn py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-sm';
-        }
-      });
-    }
-
-    function setModalColor(color) {
-      document.getElementById('taskColorInput').value = color;
-      document.querySelectorAll('.color-choice').forEach(btn => {
-        if (btn.dataset.color === color) {
-          btn.classList.add('ring-2', 'ring-white');
-        } else {
-          btn.classList.remove('ring-2', 'ring-white');
-        }
-      });
-    }
-
-    function setModalDays(selectedDays) {
-      document.querySelectorAll('.weekday-pill').forEach(btn => {
-        const day = parseInt(btn.dataset.day);
-        if (selectedDays.includes(day)) {
-          btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-400');
-          btn.classList.add('bg-emerald-600', 'border-emerald-500', 'text-white');
-        } else {
-          btn.classList.remove('bg-emerald-600', 'border-emerald-500', 'text-white');
-          btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400');
-        }
-      });
-    }
-
-    function saveTaskFromModal() {
-      const id = document.getElementById('taskEditId').value;
-      const name = document.getElementById('taskNameInput').value.trim();
-      const group = document.getElementById('taskGroupInput').value.trim() || 'Allgemein';
-      const points = parseFloat(document.getElementById('taskPointsInput').value) || 1.0;
-      const color = document.getElementById('taskColorInput').value || 'emerald';
-      const startDate = document.getElementById('taskStartDate').value;
-      const endDate = document.getElementById('taskEndDate').value;
-      const type = document.querySelector('input[name="taskType"]:checked').value;
-
-      // Collect selected days
-      const days = [];
-      document.querySelectorAll('.weekday-pill').forEach(btn => {
-        if (btn.classList.contains('bg-emerald-600')) {
-          days.push(parseInt(btn.dataset.day));
-        }
-      });
-
-      if (!name) {
-        showToast('Bitte einen Namen eingeben!');
-        return;
-      }
-      if (days.length === 0) {
-        showToast('Wähle mindestens einen Wochentag aus!');
-        return;
-      }
-
-      if (id) {
-        // Edit existing
-        const idx = tasks.findIndex(t => t.id === id);
-        if (idx !== -1) {
-          tasks[idx] = { ...tasks[idx], name, group, points, color, startDate, endDate, type, days };
-        }
-        showToast('Aufgabe aktualisiert!');
-      } else {
-        // Create new
-        const newTask = {
-          id: 'task-' + Date.now(),
-          name,
-          group,
-          points,
-          color,
-          startDate: startDate || toDateKey(new Date()),
-          endDate,
-          type,
-          days
-        };
-        tasks.push(newTask);
-        showToast('Neue Aufgabe angelegt!');
-      }
-
-      saveState();
-      closeModal();
-      renderTodayView();
-      renderManageView();
-      renderStatsView();
-    }
-
-    function deleteTaskFromModal() {
-      const id = document.getElementById('taskEditId').value;
-      if (!id) return;
-      tasks = tasks.filter(t => t.id !== id);
-      saveState();
-      closeModal();
-      showToast('Aufgabe gelöscht');
-      renderTodayView();
-      renderManageView();
-      renderStatsView();
-    }
-
-    /* ==========================================================
-       5. STATISTIK & AUSWERTUNG ENGINE
-       ========================================================== */
-    /**
-     * Calculates statistics across a given range of days:
-     * - Returns:
-     *   totalEarned (x), totalMax (y),
-     *   byGroup: { groupName: { earned, max, color } },
-     *   byTask: { taskId: { earned, max, name, group } }
-     */
-    function calculateStatistics(startDate, endDate) {
-      let totalEarned = 0;
-      let totalMax = 0;
-      const byGroup = {};
-      const byTask = {};
-
-      tasks.forEach(t => {
-        byTask[t.id] = { earned: 0, max: 0, name: t.name, group: t.group, color: t.color, points: t.points };
-        if (!byGroup[t.group]) {
-          byGroup[t.group] = { earned: 0, max: 0, color: t.color };
-        }
-      });
-
-      const cursor = new Date(startDate);
-      cursor.setHours(0,0,0,0);
-      const endLimit = new Date(endDate);
-      endLimit.setHours(23,59,59,999);
-
-      while (cursor <= endLimit) {
-        const k = toDateKey(cursor);
-        const dayTasks = getTasksForDate(cursor);
-
-        dayTasks.forEach(task => {
-          const pts = task.points;
-          totalMax += pts;
-
-          if (!byTask[task.id]) {
-            byTask[task.id] = { earned: 0, max: 0, name: task.name, group: task.group, color: task.color, points: pts };
-          }
-          byTask[task.id].max += pts;
-
-          if (!byGroup[task.group]) {
-            byGroup[task.group] = { earned: 0, max: 0, color: task.color };
-          }
-          byGroup[task.group].max += pts;
-
-          if (task.isDone) {
-            totalEarned += pts;
-            byTask[task.id].earned += pts;
-            byGroup[task.group].earned += pts;
-          }
-        });
-
-        cursor.setDate(cursor.getDate() + 1);
-      }
-
-      return { totalEarned, totalMax, byGroup, byTask };
-    }
-
-    /**
-     * Get Start and End of ISO week given offset
-     */
-    function getWeekRange(offsetWeeks = 0) {
-      const now = new Date();
-      now.setDate(now.getDate() + (offsetWeeks * 7));
-      const day = now.getDay();
-      // European week starts on Monday (1). Sunday is 0 -> 7
-      const distanceToMon = (day === 0 ? -6 : 1) - day;
-      const monday = new Date(now);
-      monday.setDate(now.getDate() + distanceToMon);
-      monday.setHours(0,0,0,0);
-
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      sunday.setHours(23,59,59,999);
-
-      return { monday, sunday };
-    }
-
-    function renderStatsView() {
-      // 1. Overall Lifetime Stats (from earliest task start to today)
-      let earliestDate = new Date();
-      tasks.forEach(t => {
-        if (t.startDate) {
-          const d = parseDateKey(t.startDate);
-          if (d < earliestDate) earliestDate = d;
-        }
-      });
-      // At least 7 days range
-      const today = new Date();
-      if ((today - earliestDate) / (1000 * 60 * 60 * 24) < 7) {
-        earliestDate = new Date(today);
-        earliestDate.setDate(today.getDate() - 14);
-      }
-
-      const overall = calculateStatistics(earliestDate, today);
-
-      const overallPct = overall.totalMax > 0 ? Math.round((overall.totalEarned / overall.totalMax) * 100) : 0;
-      document.getElementById('statsOverallScore').textContent = formatPts(overall.totalEarned);
-      document.getElementById('statsOverallMax').textContent = formatPts(overall.totalMax);
-      document.getElementById('statsOverallPercent').textContent = `${overallPct}%`;
-      document.getElementById('statsOverallBar').style.width = `${overallPct}%`;
-
-      // 2. Week Stats
-      const weekRange = getWeekRange(statsWeekOffset);
-      const weekStats = calculateStatistics(weekRange.monday, weekRange.sunday);
-
-      const kwNumber = getWeekNumber(weekRange.monday);
-      document.getElementById('statsWeekLabel').textContent = `KW ${kwNumber} (${weekRange.monday.getDate()}.${weekRange.monday.getMonth()+1} - ${weekRange.sunday.getDate()}.${weekRange.sunday.getMonth()+1})`;
-      
-      document.getElementById('weekScoreX').textContent = formatPts(weekStats.totalEarned);
-      document.getElementById('weekScoreY').textContent = formatPts(weekStats.totalMax);
-      const weekPct = weekStats.totalMax > 0 ? Math.round((weekStats.totalEarned / weekStats.totalMax) * 100) : 0;
-      document.getElementById('weekScorePercent').textContent = `${weekPct}%`;
-
-      // 7-Day Day Pills in Week Card
-      const weekDaysContainer = document.getElementById('weekDaysPills');
-      weekDaysContainer.innerHTML = '';
-      const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-      const dayIter = new Date(weekRange.monday);
-
-      for (let i = 0; i < 7; i++) {
-        const dKey = toDateKey(dayIter);
-        const dayTasks = getTasksForDate(dayIter);
-        let dMax = 0, dEarned = 0;
-        dayTasks.forEach(dt => {
-          dMax += dt.points;
-          if (dt.isDone) dEarned += dt.points;
-        });
-
-        const dayPct = dMax > 0 ? (dEarned / dMax) : 0;
-        let ringBg = 'bg-slate-800 text-slate-500 border border-slate-700';
-        if (dMax > 0) {
-          if (dayPct === 1) ringBg = 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold';
-          else if (dayPct > 0) ringBg = 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold';
-          else ringBg = 'bg-slate-800 border-slate-700 text-slate-400';
-        }
-
-        const isTodayPill = dKey === toDateKey(new Date());
-
-        const pill = document.createElement('div');
-        pill.className = `p-1.5 rounded-xl flex flex-col items-center justify-center ${ringBg} ${isTodayPill ? 'ring-2 ring-emerald-400' : ''}`;
-        pill.innerHTML = `
-          <span class="text-[10px] font-semibold">${dayNames[i]}</span>
-          <span class="text-xs font-bold mt-0.5">${formatPts(dEarned)}</span>
-        `;
-        weekDaysContainer.appendChild(pill);
-        dayIter.setDate(dayIter.getDate() + 1);
-      }
-
-      // 3. Pro Gruppe Auswertung (x von y Punkten)
-      const groupContainer = document.getElementById('groupStatsContainer');
-      groupContainer.innerHTML = '';
-
-      Object.keys(overall.byGroup).forEach(groupName => {
-        const g = overall.byGroup[groupName];
-        if (g.max === 0) return;
-        const gPct = Math.round((g.earned / g.max) * 100);
-        const colorScheme = COLOR_CLASSES[g.color] || COLOR_CLASSES.emerald;
-
-        const row = document.createElement('div');
-        row.className = 'space-y-1.5';
-        row.innerHTML = `
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-200 flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full ${colorScheme.dot}"></span>
-              ${escapeHtml(groupName)}
-            </span>
-            <span class="font-semibold text-slate-300">
-              <span class="text-emerald-400 font-bold">${formatPts(g.earned)}</span> / ${formatPts(g.max)} Pkt. (${gPct}%)
-            </span>
-          </div>
-          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div class="${colorScheme.dot} h-2 rounded-full transition-all duration-500" style="width: ${gPct}%"></div>
-          </div>
-        `;
-        groupContainer.appendChild(row);
-      });
-
-      // 4. Pro Task Auswertung (x von y Punkten)
-      const taskStatsContainer = document.getElementById('taskStatsContainer');
-      taskStatsContainer.innerHTML = '';
-
-      tasks.forEach(task => {
-        const tStat = overall.byTask[task.id] || { earned: 0, max: 0 };
-        const tPct = tStat.max > 0 ? Math.round((tStat.earned / tStat.max) * 100) : 0;
-        const colorScheme = COLOR_CLASSES[task.color] || COLOR_CLASSES.emerald;
-
-        const row = document.createElement('div');
-        row.className = 'p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 space-y-1.5';
-        row.innerHTML = `
-          <div class="flex items-center justify-between">
-            <div class="min-w-0 pr-2">
-              <div class="text-xs font-bold text-white truncate">${escapeHtml(task.name)}</div>
-              <div class="text-[10px] text-slate-400 flex items-center gap-1.5">
-                <span class="${colorScheme.text}">${escapeHtml(task.group)}</span>
-                <span>•</span>
-                <span>${task.points} Pkt./Erledigung</span>
-              </div>
-            </div>
-            <div class="text-right flex-shrink-0">
-              <div class="text-xs font-bold text-emerald-400">${formatPts(tStat.earned)} <span class="text-slate-400 font-normal">/ ${formatPts(tStat.max)}</span></div>
-              <div class="text-[10px] font-semibold text-slate-400">${tPct}%</div>
-            </div>
-          </div>
-          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: ${tPct}%"></div>
-          </div>
-        `;
-        taskStatsContainer.appendChild(row);
-      });
-    }
-
-    function formatPts(val) {
-      if (!val) return '0';
-      return (val % 1 === 0) ? val.toString() : val.toFixed(1);
+    function getMondayOfWeek(d) {
+      const day = d.getDay();
+      const diff = (day === 0 ? -6 : 1) - day;
+      const mon = new Date(d);
+      mon.setDate(d.getDate() + diff);
+      mon.setHours(0, 0, 0, 0);
+      return mon;
     }
 
     function getWeekNumber(d) {
-      const target = new Date(d.valueOf());
-      const dayNr = (d.getDay() + 6) % 7;
-      target.setDate(target.getDate() - dayNr + 3);
-      const firstThursday = target.valueOf();
-      target.setMonth(0, 1);
-      if (target.getDay() !== 4) {
-        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
-      }
-      return 1 + Math.ceil((firstThursday - target) / 604800000);
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
     }
 
-    /* ==========================================================
-       6. TAB SWITCHING & EVENT LISTENERS
-       ========================================================== */
-    function switchToTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('text-emerald-400');
-        btn.classList.add('text-slate-400');
-        const icon = btn.querySelector('i');
-        if (icon) {
-          icon.classList.remove('ph-fill');
-          icon.classList.add('ph-bold');
+    /* ========================================================
+       PERSISTENCE & INIT
+       ======================================================== */
+    function loadData() {
+      try {
+        const storedTasks = localStorage.getItem(STORAGE_KEY_TASKS);
+        tasks = storedTasks ? JSON.parse(storedTasks) : [...DEFAULT_TASKS];
+      } catch (e) {
+        tasks = [...DEFAULT_TASKS];
+      }
+
+      try {
+        const storedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+        logs = storedLogs ? JSON.parse(storedLogs) : {};
+      } catch (e) {
+        logs = {};
+      }
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasks));
+        localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+      } catch (e) {
+        console.error("Storage save failed", e);
+      }
+    }
+
+    /* ========================================================
+       CORE TASK RESOLUTION LOGIC FOR A GIVEN DATE
+       ======================================================== */
+    // Determines which tasks are present/active on date `targetDate`
+    // Returns array of objects: { task, isDueToday, isRollover, completed, earnedPoints }
+    function resolveTasksForDate(targetDate) {
+      const dateStr = formatIsoDate(targetDate);
+      const dayOfWeek = getDayOfWeek(targetDate);
+      const dayLogs = logs[dateStr] || {};
+
+      const activeTasks = [];
+
+      for (const t of tasks) {
+        // Date range checks
+        if (t.startDate && dateStr < t.startDate) continue;
+        if (t.endDate && dateStr > t.endDate) continue;
+
+        let shouldShow = false;
+        let isRollover = false;
+        let isDueToday = false;
+
+        if (t.type === 'A') {
+          // Typ A: Nur an konfigurierten Wochentagen
+          if (t.days.includes(dayOfWeek)) {
+            shouldShow = true;
+            isDueToday = true;
+          }
+        } else if (t.type === 'B') {
+          // Typ B: Aufgaben mit Übertrag (Rollover)
+          // 1. Wenn heute ein regulärer Tag ist:
+          if (t.days.includes(dayOfWeek)) {
+            shouldShow = true;
+            isDueToday = true;
+          } else {
+            // 2. Prüfen, ob eine offene Aufgabe von vergangenen Tagen nach vorne getragen wird
+            // Wir blicken zurück bis zum letzten geplanten Tag innerhalb der letzten 7 Tage
+            let lookback = new Date(targetDate);
+            let pendingRollover = false;
+
+            for (let i = 1; i <= 7; i++) {
+              lookback.setDate(lookback.getDate() - 1);
+              const prevIso = formatIsoDate(lookback);
+              if (t.startDate && prevIso < t.startDate) break;
+
+              const prevDayWeek = getDayOfWeek(lookback);
+              const wasCompletedOnPrev = !!(logs[prevIso] && logs[prevIso][t.id] && logs[prevIso][t.id].completed);
+
+              if (wasCompletedOnPrev) {
+                // Aufgabe wurde an diesem Tag erledigt -> kein weiterer Übertrag von davor
+                break;
+              }
+
+              if (t.days.includes(prevDayWeek)) {
+                // Hier fiel die Aufgabe regulär an und wurde bis heute nicht erledigt!
+                pendingRollover = true;
+                break;
+              }
+            }
+
+            if (pendingRollover) {
+              shouldShow = true;
+              isRollover = true;
+            }
+          }
+        } else if (t.type === 'C') {
+          // Typ C: Beliebig oft / Ad-hoc / Gewohnheit - wird jeden Tag zur Auswahl angezeigt
+          shouldShow = true;
+          isDueToday = true;
+        }
+
+        if (shouldShow) {
+          const logEntry = dayLogs[t.id];
+          const isDone = !!(logEntry && logEntry.completed);
+          const earned = isDone ? (logEntry.points !== undefined ? logEntry.points : t.points) : 0;
+
+          activeTasks.push({
+            task: t,
+            isDueToday,
+            isRollover,
+            completed: isDone,
+            earnedPoints: earned
+          });
+        }
+      }
+
+      return activeTasks;
+    }
+
+    /* ========================================================
+       RENDER: CHECKLIST VIEW
+       ======================================================== */
+    function renderChecklistView() {
+      const dateStr = formatIsoDate(selectedDate);
+      const isDateCurrent = isToday(selectedDate);
+
+      // Date Header labels
+      const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+      const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      
+      const dayLabel = isDateCurrent 
+        ? 'Heute' 
+        : `${dayNames[selectedDate.getDay()]}, ${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]}`;
+
+      document.getElementById('displayDateLabel').textContent = isDateCurrent ? 'Heute' : dayLabel;
+      document.getElementById('displayDateSub').textContent = `${dayNames[selectedDate.getDay()]}, ${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
+      document.getElementById('headerSubText').textContent = isDateCurrent ? 'Checkliste für Heute' : `Nachtrag: ${selectedDate.toLocaleDateString('de-DE')}`;
+      document.getElementById('hiddenDatePicker').value = dateStr;
+
+      const activeList = resolveTasksForDate(selectedDate);
+      const container = document.getElementById('tasksContainer');
+      container.innerHTML = '';
+
+      // Calculate Day Score
+      let earnedToday = 0;
+      let possibleToday = 0;
+      activeList.forEach(item => {
+        if (item.completed) earnedToday += item.earnedPoints;
+        // For possible score: Typ A and B contribute their value, Typ C contributes if completed
+        if (item.task.type !== 'C') {
+          possibleToday += item.task.points;
+        } else if (item.completed) {
+          possibleToday += item.earnedPoints;
         }
       });
+      document.getElementById('dayScoreBadge').textContent = `${earnedToday.toFixed(1).replace('.0','')} / ${possibleToday.toFixed(1).replace('.0','')} Pkt`;
 
-      const selectedSection = document.getElementById(`tab-${tabId}`);
-      if (selectedSection) selectedSection.classList.add('active');
-
-      const activeNav = document.getElementById(`nav-${tabId}`);
-      if (activeNav) {
-        activeNav.classList.remove('text-slate-400');
-        activeNav.classList.add('text-emerald-400');
-        const icon = activeNav.querySelector('i');
-        if (icon) {
-          icon.classList.remove('ph-bold');
-          icon.classList.add('ph-fill');
-        }
+      if (activeList.length === 0) {
+        container.innerHTML = `
+          <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-8 text-center">
+            <i class="fa-regular fa-calendar-check text-3xl text-slate-500 mb-2"></i>
+            <h3 class="text-sm font-semibold text-slate-300">Keine Aufgaben für diesen Tag</h3>
+            <p class="text-xs text-slate-400 mt-1">Über den Button "+ Neu" können neue Routinen angelegt werden.</p>
+          </div>
+        `;
+        return;
       }
 
-      if (tabId === 'today') renderTodayView();
-      if (tabId === 'manage') renderManageView();
-      if (tabId === 'stats') renderStatsView();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Group active tasks by category
+      const grouped = {};
+      activeList.forEach(item => {
+        const cat = item.task.category || 'Allgemein';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(item);
+      });
+
+      // Render each category block
+      for (const [category, items] of Object.entries(grouped)) {
+        const catCard = document.createElement('div');
+        catCard.className = 'bg-slate-800/80 border border-slate-700/70 rounded-2xl overflow-hidden shadow-sm';
+
+        // Header for Category
+        const completedInCat = items.filter(i => i.completed).length;
+        const catHeader = document.createElement('div');
+        catHeader.className = 'px-4 py-2.5 bg-slate-850/90 border-b border-slate-700/50 flex items-center justify-between';
+        catHeader.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-200">${escapeHtml(category)}</span>
+          </div>
+          <span class="text-[11px] font-medium text-slate-400">${completedInCat}/${items.length}</span>
+        `;
+        catCard.appendChild(catHeader);
+
+        // Task Items list
+        const listDiv = document.createElement('div');
+        listDiv.className = 'divide-y divide-slate-700/40';
+
+        items.forEach(item => {
+          const t = item.task;
+          const isDone = item.completed;
+          const taskRow = document.createElement('div');
+          taskRow.className = `p-3.5 flex items-center justify-between gap-3 transition-colors ${isDone ? 'bg-emerald-950/20' : 'hover:bg-slate-750/30'}`;
+
+          // Type badge styling
+          let typeBadge = '';
+          if (t.type === 'A') {
+            typeBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300">A</span>`;
+          } else if (t.type === 'B') {
+            typeBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300" title="Aufgabe mit Vortrag">B ${item.isRollover ? '• Übertrag' : ''}</span>`;
+          } else if (t.type === 'C') {
+            typeBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300" title="Beliebig oft / Ziel: ${t.weeklyTarget} Pkt">C Ziel ${t.weeklyTarget}p</span>`;
+          }
+
+          taskRow.innerHTML = `
+            <div class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer select-none" data-action="toggle" data-id="${t.id}">
+              <!-- Touch-Friendly Custom Checkbox -->
+              <div class="w-6 h-6 rounded-lg flex items-center justify-center border transition-all ${isDone ? 'bg-emerald-500 border-emerald-400 text-white shadow-md shadow-emerald-500/30' : 'border-slate-600 bg-slate-900/80 text-transparent'}">
+                <i class="fa-solid fa-check text-xs"></i>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-xs font-semibold ${isDone ? 'text-slate-400 line-through' : 'text-slate-100'} break-words">
+                    ${escapeHtml(t.title)}
+                  </span>
+                  ${typeBadge}
+                </div>
+                <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span>${isDone ? '+' + item.earnedPoints + ' Pkt gesammelt' : t.points + ' Pkt möglich'}</span>
+                  ${item.isRollover && !isDone ? '<span class="text-amber-400 font-medium text-[10px]"><i class="fa-solid fa-clock-rotate-left"></i> Von gestern vorgetragen</span>' : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Context Actions / Quick Point selector for Type C or Edit -->
+            <div class="flex items-center gap-1">
+              ${t.type === 'C' ? `
+                <select class="quick-points-select bg-slate-900 border border-slate-700 text-slate-200 text-[10px] rounded-lg px-1.5 py-1 focus:outline-none" data-id="${t.id}" title="Punkte für heute">
+                  <option value="1" ${item.earnedPoints === 1 || t.points === 1 ? 'selected' : ''}>1.0p</option>
+                  <option value="1.5" ${item.earnedPoints === 1.5 || t.points === 1.5 ? 'selected' : ''}>1.5p</option>
+                  <option value="2" ${item.earnedPoints === 2 || t.points === 2 ? 'selected' : ''}>2.0p</option>
+                  <option value="3" ${item.earnedPoints === 3 || t.points === 3 ? 'selected' : ''}>3.0p</option>
+                </select>
+              ` : ''}
+            </div>
+          `;
+
+          // Event Listener for Toggling
+          taskRow.querySelector('[data-action="toggle"]').addEventListener('click', (e) => {
+            toggleTaskCompletion(t.id, dateStr, item.earnedPoints || t.points);
+          });
+
+          // Event Listener for Typ C point override
+          const ptSelect = taskRow.querySelector('.quick-points-select');
+          if (ptSelect) {
+            ptSelect.addEventListener('change', (e) => {
+              const val = parseFloat(e.target.value);
+              updateTaskPointsForDay(t.id, dateStr, val);
+            });
+          }
+
+          listDiv.appendChild(taskRow);
+        });
+
+        catCard.appendChild(listDiv);
+        container.appendChild(catCard);
+      }
     }
 
-    function showToast(msg) {
+    /* ========================================================
+       TASK TOGGLING & COMPLETION HANDLERS
+       ======================================================== */
+    function toggleTaskCompletion(taskId, dateStr, defaultPoints) {
+      if (!logs[dateStr]) {
+        logs[dateStr] = {};
+      }
+
+      const current = logs[dateStr][taskId];
+      const task = tasks.find(x => x.id === taskId);
+      const pointsToAward = defaultPoints || (task ? task.points : 1);
+
+      if (current && current.completed) {
+        // Unmark
+        delete logs[dateStr][taskId];
+        showToast('Aufgabe als offen markiert', 'info');
+      } else {
+        // Mark as completed
+        logs[dateStr][taskId] = {
+          completed: true,
+          points: pointsToAward,
+          completedAt: new Date().toISOString()
+        };
+        showToast(`Erledigt! +${pointsToAward} Punkte gutgeschrieben`, 'success');
+      }
+
+      saveData();
+      renderChecklistView();
+    }
+
+    function updateTaskPointsForDay(taskId, dateStr, points) {
+      if (!logs[dateStr]) logs[dateStr] = {};
+      if (logs[dateStr][taskId] && logs[dateStr][taskId].completed) {
+        logs[dateStr][taskId].points = points;
+        saveData();
+        renderChecklistView();
+        showToast(`Punkte angepasst auf ${points}`, 'info');
+      } else {
+        // Mark as completed with these points
+        logs[dateStr][taskId] = {
+          completed: true,
+          points: points,
+          completedAt: new Date().toISOString()
+        };
+        saveData();
+        renderChecklistView();
+        showToast(`Erledigt mit ${points} Punkten!`, 'success');
+      }
+    }
+
+    /* ========================================================
+       STATISTICS CALCULATION & RENDERING
+       ======================================================== */
+    function renderStatisticsView() {
+      const container = document.getElementById('statsGroupsContainer');
+      container.innerHTML = '';
+
+      let startDate, endDate;
+      const today = new Date();
+
+      if (statScope === 'week') {
+        const mon = getMondayOfWeek(selectedDate);
+        const sun = addDays(mon, 6);
+        startDate = mon;
+        endDate = sun;
+        document.getElementById('statScopeTitle').textContent = `Woche KW ${getWeekNumber(selectedDate)} (${mon.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${sun.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})})`;
+      } else {
+        // Overall: Find earliest start date from tasks or logs
+        let earliest = new Date();
+        tasks.forEach(t => {
+          if (t.startDate) {
+            const p = parseIsoDate(t.startDate);
+            if (p < earliest) earliest = p;
+          }
+        });
+        startDate = earliest;
+        endDate = today;
+        document.getElementById('statScopeTitle').textContent = `Gesamtzeitraum (${startDate.toLocaleDateString('de-DE')} bis heute)`;
+      }
+
+      // Aggregate points per task and group
+      // For each day in range, compute earned and possible points
+      let totalEarned = 0;
+      let totalTheoretical = 0;
+
+      const taskStats = {};
+      tasks.forEach(t => {
+        taskStats[t.id] = {
+          task: t,
+          earned: 0,
+          theoretical: 0,
+          occurrences: 0,
+          completedCount: 0
+        };
+      });
+
+      // Iterate day by day in chosen interval
+      let curr = new Date(startDate);
+      const endLimit = new Date(endDate);
+      endLimit.setHours(23, 59, 59, 999);
+
+      // Loop days
+      while (curr <= endLimit) {
+        const dStr = formatIsoDate(curr);
+        const dayTasks = resolveTasksForDate(curr);
+
+        dayTasks.forEach(item => {
+          const s = taskStats[item.task.id];
+          if (!s) return;
+
+          s.occurrences++;
+          if (item.completed) {
+            s.completedCount++;
+            s.earned += item.earnedPoints;
+          }
+
+          // For theoretical points:
+          // Typ A: points each day it's scheduled
+          if (item.task.type === 'A' && item.isDueToday) {
+            s.theoretical += item.task.points;
+          }
+          // Typ B: each scheduled day counts as its points
+          else if (item.task.type === 'B' && item.isDueToday) {
+            s.theoretical += item.task.points;
+          }
+        });
+
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      // Typ C theoretical calculation based on weeklyTarget
+      if (statScope === 'week') {
+        tasks.filter(t => t.type === 'C').forEach(t => {
+          const s = taskStats[t.id];
+          if (s) {
+            s.theoretical = t.weeklyTarget || (t.points * 2);
+          }
+        });
+      } else {
+        // For total period, estimate number of weeks between startDate and endDate
+        const diffWeeks = Math.max(1, Math.round((endLimit - startDate) / (7 * 86400000)));
+        tasks.filter(t => t.type === 'C').forEach(t => {
+          const s = taskStats[t.id];
+          if (s) {
+            s.theoretical = (t.weeklyTarget || (t.points * 2)) * diffWeeks;
+          }
+        });
+      }
+
+      // Compute total sum
+      Object.values(taskStats).forEach(s => {
+        totalEarned += s.earned;
+        totalTheoretical += s.theoretical;
+      });
+
+      // Update Summary UI
+      const percent = totalTheoretical > 0 ? Math.min(100, Math.round((totalEarned / totalTheoretical) * 100)) : 0;
+      document.getElementById('statEarnedPoints').textContent = totalEarned.toFixed(1).replace('.0','');
+      document.getElementById('statTotalPoints').textContent = `${totalTheoretical.toFixed(1).replace('.0','')} Pkt`;
+      document.getElementById('statPercentBadge').textContent = `${percent}%`;
+      document.getElementById('statProgressBar').style.width = `${percent}%`;
+
+      // Group breakdown
+      const groupMap = {};
+      tasks.forEach(t => {
+        const cat = t.category || 'Allgemein';
+        if (!groupMap[cat]) groupMap[cat] = { earned: 0, theoretical: 0, items: [] };
+        const s = taskStats[t.id];
+        groupMap[cat].earned += s.earned;
+        groupMap[cat].theoretical += s.theoretical;
+        groupMap[cat].items.push(s);
+      });
+
+      for (const [catName, data] of Object.entries(groupMap)) {
+        const catPercent = data.theoretical > 0 ? Math.min(100, Math.round((data.earned / data.theoretical) * 100)) : 0;
+        const groupCard = document.createElement('div');
+        groupCard.className = 'bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 space-y-3';
+
+        let tasksRows = '';
+        data.items.forEach(st => {
+          const tPercent = st.theoretical > 0 ? Math.min(100, Math.round((st.earned / st.theoretical) * 100)) : 0;
+          tasksRows += `
+            <div class="space-y-1 pt-2 border-t border-slate-700/50">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-medium text-slate-200">${escapeHtml(st.task.title)}</span>
+                <span class="font-bold text-sky-400">${st.earned.toFixed(1).replace('.0','')} / ${st.theoretical.toFixed(1).replace('.0','')} Pkt (${tPercent}%)</span>
+              </div>
+              <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                <div class="h-full bg-sky-500 rounded-full" style="width: ${tPercent}%"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        groupCard.innerHTML = `
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">${escapeHtml(catName)}</h3>
+            <span class="text-xs font-extrabold text-emerald-400">${data.earned.toFixed(1).replace('.0','')} / ${data.theoretical.toFixed(1).replace('.0','')} Pkt (${catPercent}%)</span>
+          </div>
+          <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-400 rounded-full" style="width: ${catPercent}%"></div>
+          </div>
+          <div class="space-y-2 mt-2">
+            ${tasksRows}
+          </div>
+        `;
+
+        container.appendChild(groupCard);
+      }
+    }
+
+    /* ========================================================
+       TASK MANAGEMENT (EDIT / DELETE / REORDER)
+       ======================================================== */
+    function renderManageView() {
+      const container = document.getElementById('manageTasksList');
+      container.innerHTML = '';
+      document.getElementById('manageTaskCount').textContent = `${tasks.length} Aufgaben`;
+
+      tasks.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm';
+        
+        let dayStr = '';
+        if (t.days.length === 7) dayStr = 'Täglich';
+        else if (t.days.length === 5 && !t.days.includes(0) && !t.days.includes(6)) dayStr = 'Mo-Fr';
+        else {
+          const names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+          dayStr = t.days.map(d => names[d]).join(', ');
+        }
+
+        card.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white truncate">${escapeHtml(t.title)}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-700 text-sky-400 font-semibold">Typ ${t.type}</span>
+            </div>
+            <div class="text-[11px] text-slate-400 flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+              <span><i class="fa-solid fa-tag text-[9px] text-slate-500"></i> ${escapeHtml(t.category)}</span>
+              <span>• ${t.points} Pkt</span>
+              <span>• ${dayStr}</span>
+              ${t.type === 'C' ? `<span class="text-purple-400">• Ziel: ${t.weeklyTarget}p/Woche</span>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="btn-edit-task w-8 h-8 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition active:scale-95" data-id="${t.id}" title="Bearbeiten">
+              <i class="fa-solid fa-pencil text-xs"></i>
+            </button>
+            <button class="btn-delete-task w-8 h-8 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center transition active:scale-95" data-id="${t.id}" title="Löschen">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+
+        card.querySelector('.btn-edit-task').addEventListener('click', () => openTaskModal(t.id));
+        card.querySelector('.btn-delete-task').addEventListener('click', () => deleteTask(t.id));
+
+        container.appendChild(card);
+      });
+    }
+
+    function deleteTask(id) {
+      const task = tasks.find(x => x.id === id);
+      if (!task) return;
+      // Using an in-app confirm dialog replacement or custom modal
+      if (window.confirm) {
+        // Fallback confirmation
+        const confirmed = window.confirm(`Möchtest du "${task.title}" wirklich löschen?`);
+        if (!confirmed) return;
+      }
+      tasks = tasks.filter(x => x.id !== id);
+      saveData();
+      renderManageView();
+      renderChecklistView();
+      showToast('Aufgabe gelöscht', 'info');
+    }
+
+    /* ========================================================
+       MODAL: ADD / EDIT TASK
+       ======================================================== */
+    const modalTask = document.getElementById('modalTask');
+    const taskForm = document.getElementById('taskForm');
+    const formCategorySelect = document.getElementById('formCategorySelect');
+    const customCategoryWrapper = document.getElementById('customCategoryWrapper');
+    const weeklyTargetGroup = document.getElementById('weeklyTargetGroup');
+    const weekdaysSelector = document.getElementById('weekdaysSelector');
+
+    function openTaskModal(editId = null) {
+      taskForm.reset();
+      populateCategorySelect();
+
+      if (editId) {
+        const task = tasks.find(x => x.id === editId);
+        if (!task) return;
+        document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-sky-400"></i> Aufgabe bearbeiten';
+        document.getElementById('formTaskId').value = task.id;
+        document.getElementById('formTitle').value = task.title;
+
+        // Category
+        if ([...formCategorySelect.options].some(o => o.value === task.category)) {
+          formCategorySelect.value = task.category;
+          customCategoryWrapper.classList.add('hidden');
+        } else {
+          formCategorySelect.value = '__NEW__';
+          customCategoryWrapper.classList.remove('hidden');
+          document.getElementById('formCategoryCustom').value = task.category;
+        }
+
+        // Type
+        const radio = taskForm.querySelector(`input[name="formType"][value="${task.type}"]`);
+        if (radio) radio.checked = true;
+
+        // Days
+        document.querySelectorAll('.day-check').forEach(chk => {
+          chk.checked = task.days.includes(parseInt(chk.value));
+        });
+
+        document.getElementById('formPoints').value = task.points;
+        document.getElementById('formWeeklyTarget').value = task.weeklyTarget || 4;
+        document.getElementById('formStartDate').value = task.startDate || '';
+        document.getElementById('formEndDate').value = task.endDate || '';
+      } else {
+        document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-plus text-sky-400"></i> Neue Aufgabe erstellen';
+        document.getElementById('formTaskId').value = '';
+        document.getElementById('formStartDate').value = formatIsoDate(new Date());
+        document.querySelectorAll('.day-check').forEach(chk => chk.checked = true);
+      }
+
+      handleTypeChangeUI();
+      modalTask.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      modalTask.classList.add('hidden');
+    }
+
+    function populateCategorySelect() {
+      const cats = new Set(['Fitness', 'Mindset & Wissen', 'Soziales', 'Sex']);
+      tasks.forEach(t => {
+        if (t.category) cats.add(t.category);
+      });
+
+      formCategorySelect.innerHTML = '';
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        formCategorySelect.appendChild(opt);
+      });
+
+      const newOpt = document.createElement('option');
+      newOpt.value = '__NEW__';
+      newOpt.textContent = '+ Neue Gruppe...';
+      formCategorySelect.appendChild(newOpt);
+    }
+
+    function handleTypeChangeUI() {
+      const selectedType = document.querySelector('input[name="formType"]:checked')?.value || 'A';
+      const desc = document.getElementById('typeDescription');
+
+      if (selectedType === 'A') {
+        desc.textContent = 'Typ A: Fällt an ausgewählten Wochentagen fest an. Punkte verfallen bei Nicht-Erledigung.';
+        weekdaysSelector.classList.remove('hidden');
+        weeklyTargetGroup.classList.add('hidden');
+      } else if (selectedType === 'B') {
+        desc.textContent = 'Typ B: An festen Tagen geplant. Bei Nicht-Erledigung rollt die Aufgabe auf den nächsten Tag weiter (keine Doppelung).';
+        weekdaysSelector.classList.remove('hidden');
+        weeklyTargetGroup.classList.add('hidden');
+      } else if (selectedType === 'C') {
+        desc.textContent = 'Typ C: Beliebig oft verfügbar (max 1x/Tag abhaken). Definiertes Wochenziel für die Statistik.';
+        weekdaysSelector.classList.add('hidden');
+        weeklyTargetGroup.classList.remove('hidden');
+      }
+    }
+
+    formCategorySelect.addEventListener('change', () => {
+      if (formCategorySelect.value === '__NEW__') {
+        customCategoryWrapper.classList.remove('hidden');
+        document.getElementById('formCategoryCustom').focus();
+      } else {
+        customCategoryWrapper.classList.add('hidden');
+      }
+    });
+
+    document.querySelectorAll('input[name="formType"]').forEach(radio => {
+      radio.addEventListener('change', handleTypeChangeUI);
+    });
+
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('formTaskId').value || ('task_' + Date.now());
+      const title = document.getElementById('formTitle').value.trim();
+      let category = formCategorySelect.value;
+      if (category === '__NEW__') {
+        category = document.getElementById('formCategoryCustom').value.trim() || 'Allgemein';
+      }
+
+      const type = document.querySelector('input[name="formType"]:checked').value;
+      const points = parseFloat(document.getElementById('formPoints').value) || 1.0;
+      const weeklyTarget = parseFloat(document.getElementById('formWeeklyTarget').value) || 4.0;
+      const startDate = document.getElementById('formStartDate').value;
+      const endDate = document.getElementById('formEndDate').value;
+
+      // Collect days
+      const days = [];
+      document.querySelectorAll('.day-check:checked').forEach(chk => {
+        days.push(parseInt(chk.value));
+      });
+
+      if (type !== 'C' && days.length === 0) {
+        showToast('Bitte mindestens einen Wochentag wählen', 'error');
+        return;
+      }
+
+      const existingIndex = tasks.findIndex(x => x.id === id);
+      const taskObject = {
+        id,
+        title,
+        category,
+        type,
+        days: type === 'C' ? [0, 1, 2, 3, 4, 5, 6] : days,
+        points,
+        weeklyTarget: type === 'C' ? weeklyTarget : (points * (days.length || 1)),
+        startDate,
+        endDate
+      };
+
+      if (existingIndex >= 0) {
+        tasks[existingIndex] = taskObject;
+        showToast('Aufgabe erfolgreich aktualisiert', 'success');
+      } else {
+        tasks.push(taskObject);
+        showToast('Neue Aufgabe hinzugefügt', 'success');
+      }
+
+      saveData();
+      closeModal();
+      if (currentTab === 'checklist') renderChecklistView();
+      else if (currentTab === 'manage') renderManageView();
+      else if (currentTab === 'stats') renderStatisticsView();
+    });
+
+    /* ========================================================
+       NAVIGATION & TAB SWITCHING
+       ======================================================== */
+    const viewChecklist = document.getElementById('viewChecklist');
+    const viewStats = document.getElementById('viewStats');
+    const viewManage = document.getElementById('viewManage');
+
+    const navBtnChecklist = document.getElementById('navBtnChecklist');
+    const navBtnStats = document.getElementById('navBtnStats');
+    const navBtnManage = document.getElementById('navBtnManage');
+
+    function switchTab(tab) {
+      currentTab = tab;
+
+      // Update Nav active style
+      [navBtnChecklist, navBtnStats, navBtnManage].forEach(btn => {
+        btn.classList.remove('text-sky-400');
+        btn.classList.add('text-slate-400');
+      });
+
+      viewChecklist.classList.add('hidden');
+      viewStats.classList.add('hidden');
+      viewManage.classList.add('hidden');
+
+      if (tab === 'checklist') {
+        navBtnChecklist.classList.add('text-sky-400');
+        navBtnChecklist.classList.remove('text-slate-400');
+        viewChecklist.classList.remove('hidden');
+        renderChecklistView();
+      } else if (tab === 'stats') {
+        navBtnStats.classList.add('text-sky-400');
+        navBtnStats.classList.remove('text-slate-400');
+        viewStats.classList.remove('hidden');
+        renderStatisticsView();
+      } else if (tab === 'manage') {
+        navBtnManage.classList.add('text-sky-400');
+        navBtnManage.classList.remove('text-slate-400');
+        viewManage.classList.remove('hidden');
+        renderManageView();
+      }
+    }
+
+    navBtnChecklist.addEventListener('click', () => switchTab('checklist'));
+    navBtnStats.addEventListener('click', () => switchTab('stats'));
+    navBtnManage.addEventListener('click', () => switchTab('manage'));
+
+    /* ========================================================
+       DATE CONTROLS & "TASKS AKTUALISIEREN"
+       ======================================================== */
+    document.getElementById('btnPrevDay').addEventListener('click', () => {
+      selectedDate = addDays(selectedDate, -1);
+      renderChecklistView();
+    });
+
+    document.getElementById('btnNextDay').addEventListener('click', () => {
+      selectedDate = addDays(selectedDate, 1);
+      renderChecklistView();
+    });
+
+    document.getElementById('btnJumpToday').addEventListener('click', () => {
+      selectedDate = new Date();
+      renderChecklistView();
+      showToast('Zu Heute gesprungen', 'info');
+    });
+
+    // Date Picker Input
+    const hiddenDatePicker = document.getElementById('hiddenDatePicker');
+    document.getElementById('btnTriggerDatePicker').addEventListener('click', () => {
+      try {
+        hiddenDatePicker.showPicker();
+      } catch (err) {
+        hiddenDatePicker.click();
+      }
+    });
+
+    hiddenDatePicker.addEventListener('change', (e) => {
+      if (e.target.value) {
+        selectedDate = parseIsoDate(e.target.value);
+        renderChecklistView();
+      }
+    });
+
+    // Button: "Tasks aktualisieren" (Neuberechnung & Sync)
+    document.getElementById('btnRefreshTasks').addEventListener('click', () => {
+      // Re-reads storage, resolves dynamic rules & re-renders view
+      loadData();
+      renderChecklistView();
+      if (currentTab === 'stats') renderStatisticsView();
+      showToast('Tagestasks aktualisiert und neu ermittelt', 'success');
+    });
+
+    // Reset to defaults
+    document.getElementById('btnResetToDefaults').addEventListener('click', () => {
+      if (window.confirm("Alle Standard-Aufgaben und Gruppen wiederherstellen? Deine Erledigungen bleiben erhalten.")) {
+        tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+        saveData();
+        renderManageView();
+        renderChecklistView();
+        showToast('Basis-Aufgaben erfolgreich wiederhergestellt', 'success');
+      }
+    });
+
+    // Stats Period switch
+    document.getElementById('statTabWeek').addEventListener('click', () => {
+      statScope = 'week';
+      document.getElementById('statTabWeek').className = 'py-1.5 text-xs font-semibold rounded-lg bg-sky-500 text-white transition';
+      document.getElementById('statTabAll').className = 'py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition';
+      renderStatisticsView();
+    });
+
+    document.getElementById('statTabAll').addEventListener('click', () => {
+      statScope = 'all';
+      document.getElementById('statTabAll').className = 'py-1.5 text-xs font-semibold rounded-lg bg-sky-500 text-white transition';
+      document.getElementById('statTabWeek').className = 'py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition';
+      renderStatisticsView();
+    });
+
+    // Modal buttons
+    document.getElementById('btnOpenAddTask').addEventListener('click', () => openTaskModal());
+    document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+    document.getElementById('btnCancelModal').addEventListener('click', closeModal);
+
+    /* ========================================================
+       TOAST UTILITY
+       ======================================================== */
+    let toastTimeout;
+    function showToast(msg, type = 'success') {
       const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = msg;
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      clearTimeout(toastTimeout);
+      toastMsg.textContent = msg;
+
+      if (type === 'success') {
+        toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+      } else if (type === 'error') {
+        toastIcon.className = 'fa-solid fa-triangle-exclamation text-rose-400';
+      } else {
+        toastIcon.className = 'fa-solid fa-circle-info text-sky-400';
+      }
+
       toast.classList.remove('opacity-0');
       toast.classList.add('opacity-100');
-      setTimeout(() => {
+
+      toastTimeout = setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 2300);
+      }, 2500);
     }
 
     function escapeHtml(str) {
       if (!str) return '';
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
-    /* Initialize App */
-    window.onload = function() {
-      loadState();
-
-      // Setup Date Ribbon Handlers
-      document.getElementById('btnPrevDay').addEventListener('click', () => {
-        selectedDate.setDate(selectedDate.getDate() - 1);
-        renderTodayView();
-      });
-
-      document.getElementById('btnNextDay').addEventListener('click', () => {
-        selectedDate.setDate(selectedDate.getDate() + 1);
-        renderTodayView();
-      });
-
-      document.getElementById('quickToday').addEventListener('click', () => {
-        selectedDate = new Date();
-        renderTodayView();
-      });
-
-      document.getElementById('quickYesterday').addEventListener('click', () => {
-        const y = new Date();
-        y.setDate(y.getDate() - 1);
-        selectedDate = y;
-        renderTodayView();
-      });
-
-      document.getElementById('quickTomorrow').addEventListener('click', () => {
-        const t = new Date();
-        t.setDate(t.getDate() + 1);
-        selectedDate = t;
-        renderTodayView();
-      });
-
-      // Datepicker trigger
-      const hiddenDateInput = document.getElementById('hiddenDateInput');
-      document.getElementById('currentDateWrapper').addEventListener('click', () => {
-        hiddenDateInput.value = toDateKey(selectedDate);
-        hiddenDateInput.showPicker ? hiddenDateInput.showPicker() : hiddenDateInput.click();
-      });
-      hiddenDateInput.addEventListener('change', (e) => {
-        if (e.target.value) {
-          selectedDate = parseDateKey(e.target.value);
-          renderTodayView();
-        }
-      });
-
-      // Refresh / Sync Handlers
-      document.getElementById('btnRefreshTasks').addEventListener('click', refreshTasksAction);
-      document.getElementById('btnSyncCurrentDay').addEventListener('click', refreshTasksAction);
-
-      // Modal Handlers
-      document.getElementById('btnOpenNewTaskModal').addEventListener('click', openNewTaskModal);
-      document.getElementById('btnCloseModal').addEventListener('click', closeModal);
-      document.getElementById('btnCancelModal').addEventListener('click', closeModal);
-      document.getElementById('btnSaveTask').addEventListener('click', saveTaskFromModal);
-      document.getElementById('btnDeleteTask').addEventListener('click', deleteTaskFromModal);
-
-      // Points buttons in modal
-      document.querySelectorAll('.points-btn').forEach(btn => {
-        btn.addEventListener('click', () => setModalPoints(btn.dataset.points));
-      });
-
-      // Color picker dots in modal
-      document.querySelectorAll('.color-choice').forEach(btn => {
-        btn.addEventListener('click', () => setModalColor(btn.dataset.color));
-      });
-
-      // Weekday pills toggle
-      document.querySelectorAll('.weekday-pill').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (btn.classList.contains('bg-emerald-600')) {
-            btn.classList.remove('bg-emerald-600', 'border-emerald-500', 'text-white');
-            btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400');
-          } else {
-            btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-400');
-            btn.classList.add('bg-emerald-600', 'border-emerald-500', 'text-white');
-          }
-        });
-      });
-
-      // Select all days button
-      document.getElementById('btnSelectAllDays').addEventListener('click', () => {
-        setModalDays([0, 1, 2, 3, 4, 5, 6]);
-      });
-
-      // Week pagination in Stats
-      document.getElementById('btnPrevWeek').addEventListener('click', () => {
-        statsWeekOffset--;
-        renderStatsView();
-      });
-      document.getElementById('btnNextWeek').addEventListener('click', () => {
-        statsWeekOffset++;
-        renderStatsView();
-      });
-
-      // Reset Demo Data
-      document.getElementById('btnResetAllDemo').addEventListener('click', () => {
-        localStorage.removeItem(STORAGE_KEY_TASKS);
-        localStorage.removeItem(STORAGE_KEY_LOGS);
-        initDefaultData();
-        showToast('Demo-Daten wurden neu geladen!');
-        renderTodayView();
-        renderManageView();
-        renderStatsView();
-      });
-
-      // Initial Renders
-      renderTodayView();
-      renderStatsView();
-    };
+    /* ========================================================
+       BOOTSTRAP
+       ======================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      renderChecklistView();
+    });
   </script>
 </body>
 </html>
